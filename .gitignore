@@ -1,0 +1,21 @@
+# Compiled binaries
+/bin/
+*.exe
+*.out
+auth-service
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
