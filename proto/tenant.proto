@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package tenant;
+
+option go_package = "github.com/wreckx-in-scene/AuthForge/proto/tenant";
+
+service TenantAuthService {
+  rpc Register(RegisterRequest) returns (AuthResponse);
+  rpc Login(LoginRequest) returns (AuthResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (AuthResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc GoogleOAuthLogin(GoogleOAuthRequest) returns (AuthResponse);
+  rpc Logout(LogoutRequest) returns (Empty);
+  rpc LogoutAll(LogoutAllRequest) returns (Empty);
+  rpc VerifyEmail(VerifyEmailRequest) returns (Empty);
+  rpc ResendVerificationEmail(ResendVerificationEmailRequest) returns (Empty);
+}
+
+message Empty {}
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+message GoogleOAuthRequest {
+  string id_token = 1;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message LogoutAllRequest {
+  string access_token = 1;
+}
+
+message VerifyEmailRequest {
+  string token = 1;
+}
+
+message ResendVerificationEmailRequest {
+  string email = 1;
+}
+
+message AuthResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_at = 3;
+  User user = 4;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string email = 3;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string created_at = 4;
+  bool email_verified = 5;
+}

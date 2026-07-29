@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package platform;
+
+option go_package = "github.com/wreckx-in-scene/AuthForge/proto/platform";
+
+service PlatformService {
+  rpc AccountSignup(AccountSignupRequest) returns (AccountAuthResponse);
+  rpc AccountLogin(AccountLoginRequest) returns (AccountAuthResponse);
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+}
+
+message AccountSignupRequest {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+}
+
+message AccountLoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message AccountAuthResponse {
+  string access_token = 1;
+  int64 expires_at = 2;
+  Account account = 3;
+}
+
+message Account {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string created_at = 4;
+}
+
+message CreateProjectRequest {
+  string access_token = 1;
+  string name = 2;
+}
+
+message CreateProjectResponse{
+  Project project = 1;
+  string secret_key = 2;
+}
+
+message Project {
+  string id = 1;
+  string owner_id = 2;
+  string name = 3;
+  string publishable_key = 4;
+  string created_at = 5;
+}
+
