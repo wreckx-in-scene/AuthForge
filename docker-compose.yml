@@ -1,4 +1,4 @@
-version: "3.9"
+name: authforge
 
 services:
   postgres:
@@ -12,8 +12,123 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - authforge_pg_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d
+      - authforge_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authforge -d authforge"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    build:
+      context: .
+      dockerfile: deployments/Dockerfile
+      args:
+        CMD: ./cmd/migrate
+    environment:
+      MIGRATE_DATABASE_URL: postgres://authforge:authforge@postgres:5432/authforge?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  tenant:
+    build:
+      context: .
+      dockerfile: deployments/Dockerfile
+      args:
+        CMD: ./services/tenant/cmd/tenant
+    environment: &appdb
+      DATABASE_URL: postgres://authforge_app:authforge_app@postgres:5432/authforge?sslmode=disable
+      ISSUER: http://localhost:8080
+      CONSOLE_TOKEN_SECRET: cJUsq8impGopS5G7YUBsND9eHzS60vVhBckxnG3CuNc=
+      HEALTH_PORT: "8081"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck: &probe
+      test: ["CMD", "/app", "health"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  identity:
+    build:
+      context: .
+      dockerfile: deployments/Dockerfile
+      args:
+        CMD: ./services/identity/cmd/identity
+    environment:
+      <<: *appdb
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck: *probe
+
+  session:
+    build:
+      context: .
+      dockerfile: deployments/Dockerfile
+      args:
+        CMD: ./services/session/cmd/session
+    environment:
+      <<: *appdb
+      REFRESH_TTL: 720h
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck: *probe
+
+  auth:
+    build:
+      context: .
+      dockerfile: deployments/Dockerfile
+      args:
+        CMD: ./services/auth/cmd/auth
+    environment:
+      IDENTITY_GRPC_ADDR: identity:50051
+      SESSION_GRPC_ADDR: session:50051
+      ISSUER: http://localhost:8080
+      SIGNING_SEED: LvaMEqu9nHTFqIKItDcbiGFlJPV5Zl+4KXpuOzc92SU=
+      ACCESS_TTL: 10m
+      HEALTH_PORT: "8081"
+    depends_on:
+      identity:
+        condition: service_healthy
+      session:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck: *probe
+
+  gateway:
+    build:
+      context: .
+      dockerfile: deployments/Dockerfile
+      args:
+        CMD: ./services/gateway/cmd/gateway
+    environment:
+      TENANT_GRPC_ADDR: tenant:50051
+      AUTH_GRPC_ADDR: auth:50051
+      ISSUER: http://localhost:8080
+      CONSOLE_TOKEN_SECRET: cJUsq8impGopS5G7YUBsND9eHzS60vVhBckxnG3CuNc=
+      HTTP_PORT: "8080"
+      HEALTH_PORT: "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      tenant:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/app", "health"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
 volumes:
-  authforge_pg_data:
+  authforge_pg:
