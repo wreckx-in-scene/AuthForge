@@ -1,0 +1,2 @@
+DROP SCHEMA IF EXISTS tenant CASCADE;
+DROP ROLE IF EXISTS authforge_app;
