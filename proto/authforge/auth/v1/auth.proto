@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package authforge.auth.v1;
+
+option go_package = "github.com/wreckx-in-scene/AuthForge/gen/authforge/auth/v1;authv1";
+
+service AuthService {
+  rpc SignUp(SignUpRequest) returns (SignUpResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Refresh(RefreshRequest) returns (RefreshResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc VerificationKeys(VerificationKeysRequest) returns (VerificationKeysResponse);
+}
+
+message SignUpRequest {
+  string environment_id = 1;
+  string project_id = 2;
+  string email = 3;
+  string password = 4;
+}
+
+message SignUpResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 access_expires_at = 3;
+  string user_id = 4;
+  string session_id = 5;
+  bool email_verified = 6;
+}
+
+message LoginRequest {
+  string environment_id = 1;
+  string project_id = 2;
+  string email = 3;
+  string password = 4;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 access_expires_at = 3;
+  string user_id = 4;
+  string session_id = 5;
+  bool email_verified = 6;
+}
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message RefreshResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 access_expires_at = 3;
+  string user_id = 4;
+  string session_id = 5;
+  bool email_verified = 6;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+  string session_id = 2;
+  string environment_id = 3;
+}
+
+message LogoutResponse {
+  string session_id = 1;
+}
+
+message VerificationKeysRequest {}
+
+message VerificationKeysResponse {
+  string kid = 1;
+  bytes public_key = 2;
+  string alg = 3;
+}
