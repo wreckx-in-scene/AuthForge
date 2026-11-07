@@ -8,6 +8,8 @@ service IdentityService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc RequestEmailVerification(RequestEmailVerificationRequest) returns (RequestEmailVerificationResponse);
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
 }
 
 message User {
@@ -47,4 +49,20 @@ message GetUserRequest {
 
 message GetUserResponse {
   User user = 1;
+}
+
+message RequestEmailVerificationRequest {
+  string environment_id = 1;
+  string email = 2;
+}
+
+message RequestEmailVerificationResponse {}
+
+message VerifyEmailRequest {
+  string environment_id = 1;
+  string token = 2;
+}
+
+message VerifyEmailResponse {
+  bool verified = 1;
 }

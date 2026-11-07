@@ -17,7 +17,7 @@ A developer can:
 5. Call a protected route with the access token.
 6. Rotate the refresh token, or revoke the session.
 
-Google OAuth, application-user email verification, Kafka, the dashboard, hosted login, and the SDKs are later milestones. Console password recovery sends a single-use SMTP link; signup still returns `email_verified: false` without waiting on mail delivery.
+Google OAuth, Kafka, the dashboard, hosted login, and the SDKs are later milestones. Application-user email verification and console password recovery use separate single-use SMTP links.
 
 ## Runtime
 
@@ -32,7 +32,7 @@ API gateway
             +-- session     sessions and refresh-token families
 ```
 
-Postgres is the primary data dependency. The tenant service also sends console password-reset messages through configured SMTP; local Compose captures them in Mailpit. Each service owns a schema: `tenant`, `identity`, and `session`. The auth service and the gateway do not own tables.
+Postgres is the primary data dependency. The tenant service sends console password-reset messages and the identity service sends application-user verification messages through configured SMTP; local Compose captures them in Mailpit. Each service owns a schema: `tenant`, `identity`, and `session`. The auth service and the gateway do not own tables.
 
 | Service   | Public port | Talks to                          |
 |-----------|-------------|-----------------------------------|
@@ -45,6 +45,8 @@ Postgres is the primary data dependency. The tenant service also sends console p
 Internal ports are not published on the host. A client that can reach Postgres still cannot call `CreateUser` directly unless it is also inside the Compose network.
 
 Password reset tokens are random, expire after 30 minutes, and are stored only as SHA-256 hashes. A new request invalidates the previous token for that console account. The gateway always returns the same success response for known and unknown addresses, and the token is delivered only in the email link.
+
+Application-user verification tokens are random, expire after 24 hours, and are stored only as SHA-256 hashes in the identity schema under environment RLS. Verification sets `email_verified` once; clients must sign in or refresh to receive a newly signed token containing the updated claim. Verification requests also return the same success response for known and unknown addresses.
 
 ## Two credentials, two callers
 

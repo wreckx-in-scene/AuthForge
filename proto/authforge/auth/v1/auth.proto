@@ -10,6 +10,8 @@ service AuthService {
   rpc Refresh(RefreshRequest) returns (RefreshResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
   rpc VerificationKeys(VerificationKeysRequest) returns (VerificationKeysResponse);
+  rpc RequestEmailVerification(RequestEmailVerificationRequest) returns (RequestEmailVerificationResponse);
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
 }
 
 message SignUpRequest {
@@ -73,4 +75,20 @@ message VerificationKeysResponse {
   string kid = 1;
   bytes public_key = 2;
   string alg = 3;
+}
+
+message RequestEmailVerificationRequest {
+  string environment_id = 1;
+  string email = 2;
+}
+
+message RequestEmailVerificationResponse {}
+
+message VerifyEmailRequest {
+  string environment_id = 1;
+  string token = 2;
+}
+
+message VerifyEmailResponse {
+  bool verified = 1;
 }

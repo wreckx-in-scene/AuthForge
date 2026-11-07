@@ -11,7 +11,7 @@ docker compose up --build
 ```
 
 The gateway is at `http://localhost:8080`. Postgres is published on `localhost:5432` for local inspection. The gRPC services are only on the Compose network.
-Local reset emails are captured by Mailpit at `http://localhost:8025`.
+Local password-reset and email-verification messages are captured by Mailpit at `http://localhost:8025`.
 
 The signing seed in `docker-compose.yml` is a development key. It is not a production secret.
 
@@ -31,6 +31,16 @@ Console accounts can request a password reset email through the gateway. The req
 curl -s -X POST localhost:8080/v1/password-reset/request -H "content-type: application/json" -d "{\"email\":\"ada@campus.edu\"}"
 curl -s -X POST localhost:8080/v1/password-reset/confirm -H "content-type: application/json" -d "{\"reset_token\":\"af_pr_...\",\"password\":\"new-password-123\"}"
 ```
+
+## Email verification
+
+Application signup sends a verification email. For local development, open Mailpit at `http://localhost:8025`; the configured link points at `http://localhost:3000/verify-email`, which a frontend must implement. The page should submit the link's `environment_id` and `token` to the gateway:
+
+```bash
+curl -s -X POST localhost:8080/v1/email/verification/confirm -H "content-type: application/json" -d "{\"environment_id\":\"<uuid>\",\"token\":\"af_ev_...\"}"
+```
+
+To resend a verification link, send `POST /v1/email/verification/request` with the environment API key and `{"email":"student@campus.edu"}`.
 
 ## Tests
 

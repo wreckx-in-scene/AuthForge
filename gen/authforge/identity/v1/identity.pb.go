@@ -417,6 +417,190 @@ func (x *GetUserResponse) GetUser() *User {
 	return nil
 }
 
+type RequestEmailVerificationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EnvironmentId string                 `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RequestEmailVerificationRequest) Reset() {
+	*x = RequestEmailVerificationRequest{}
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RequestEmailVerificationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RequestEmailVerificationRequest) ProtoMessage() {}
+
+func (x *RequestEmailVerificationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RequestEmailVerificationRequest.ProtoReflect.Descriptor instead.
+func (*RequestEmailVerificationRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_identity_v1_identity_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *RequestEmailVerificationRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *RequestEmailVerificationRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+type RequestEmailVerificationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RequestEmailVerificationResponse) Reset() {
+	*x = RequestEmailVerificationResponse{}
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RequestEmailVerificationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RequestEmailVerificationResponse) ProtoMessage() {}
+
+func (x *RequestEmailVerificationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RequestEmailVerificationResponse.ProtoReflect.Descriptor instead.
+func (*RequestEmailVerificationResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_identity_v1_identity_proto_rawDescGZIP(), []int{8}
+}
+
+type VerifyEmailRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EnvironmentId string                 `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyEmailRequest) Reset() {
+	*x = VerifyEmailRequest{}
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyEmailRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyEmailRequest) ProtoMessage() {}
+
+func (x *VerifyEmailRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyEmailRequest.ProtoReflect.Descriptor instead.
+func (*VerifyEmailRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_identity_v1_identity_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *VerifyEmailRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *VerifyEmailRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type VerifyEmailResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Verified      bool                   `protobuf:"varint,1,opt,name=verified,proto3" json:"verified,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyEmailResponse) Reset() {
+	*x = VerifyEmailResponse{}
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyEmailResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyEmailResponse) ProtoMessage() {}
+
+func (x *VerifyEmailResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyEmailResponse.ProtoReflect.Descriptor instead.
+func (*VerifyEmailResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_identity_v1_identity_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *VerifyEmailResponse) GetVerified() bool {
+	if x != nil {
+		return x.Verified
+	}
+	return false
+}
+
 var File_authforge_identity_v1_identity_proto protoreflect.FileDescriptor
 
 const file_authforge_identity_v1_identity_proto_rawDesc = "" +
@@ -448,12 +632,23 @@ const file_authforge_identity_v1_identity_proto_rawDesc = "" +
 	"\x0eenvironment_id\x18\x01 \x01(\tR\renvironmentId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\"B\n" +
 	"\x0fGetUserResponse\x12/\n" +
-	"\x04user\x18\x01 \x01(\v2\x1b.authforge.identity.v1.UserR\x04user2\xb7\x02\n" +
+	"\x04user\x18\x01 \x01(\v2\x1b.authforge.identity.v1.UserR\x04user\"^\n" +
+	"\x1fRequestEmailVerificationRequest\x12%\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tR\renvironmentId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\"\"\n" +
+	" RequestEmailVerificationResponse\"Q\n" +
+	"\x12VerifyEmailRequest\x12%\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tR\renvironmentId\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"1\n" +
+	"\x13VerifyEmailResponse\x12\x1a\n" +
+	"\bverified\x18\x01 \x01(\bR\bverified2\xab\x04\n" +
 	"\x0fIdentityService\x12a\n" +
 	"\n" +
 	"CreateUser\x12(.authforge.identity.v1.CreateUserRequest\x1a).authforge.identity.v1.CreateUserResponse\x12g\n" +
 	"\fAuthenticate\x12*.authforge.identity.v1.AuthenticateRequest\x1a+.authforge.identity.v1.AuthenticateResponse\x12X\n" +
-	"\aGetUser\x12%.authforge.identity.v1.GetUserRequest\x1a&.authforge.identity.v1.GetUserResponseBKZIgithub.com/wreckx-in-scene/AuthForge/gen/authforge/identity/v1;identityv1b\x06proto3"
+	"\aGetUser\x12%.authforge.identity.v1.GetUserRequest\x1a&.authforge.identity.v1.GetUserResponse\x12\x8b\x01\n" +
+	"\x18RequestEmailVerification\x126.authforge.identity.v1.RequestEmailVerificationRequest\x1a7.authforge.identity.v1.RequestEmailVerificationResponse\x12d\n" +
+	"\vVerifyEmail\x12).authforge.identity.v1.VerifyEmailRequest\x1a*.authforge.identity.v1.VerifyEmailResponseBKZIgithub.com/wreckx-in-scene/AuthForge/gen/authforge/identity/v1;identityv1b\x06proto3"
 
 var (
 	file_authforge_identity_v1_identity_proto_rawDescOnce sync.Once
@@ -467,31 +662,39 @@ func file_authforge_identity_v1_identity_proto_rawDescGZIP() []byte {
 	return file_authforge_identity_v1_identity_proto_rawDescData
 }
 
-var file_authforge_identity_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_authforge_identity_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_authforge_identity_v1_identity_proto_goTypes = []any{
-	(*User)(nil),                 // 0: authforge.identity.v1.User
-	(*CreateUserRequest)(nil),    // 1: authforge.identity.v1.CreateUserRequest
-	(*CreateUserResponse)(nil),   // 2: authforge.identity.v1.CreateUserResponse
-	(*AuthenticateRequest)(nil),  // 3: authforge.identity.v1.AuthenticateRequest
-	(*AuthenticateResponse)(nil), // 4: authforge.identity.v1.AuthenticateResponse
-	(*GetUserRequest)(nil),       // 5: authforge.identity.v1.GetUserRequest
-	(*GetUserResponse)(nil),      // 6: authforge.identity.v1.GetUserResponse
+	(*User)(nil),                             // 0: authforge.identity.v1.User
+	(*CreateUserRequest)(nil),                // 1: authforge.identity.v1.CreateUserRequest
+	(*CreateUserResponse)(nil),               // 2: authforge.identity.v1.CreateUserResponse
+	(*AuthenticateRequest)(nil),              // 3: authforge.identity.v1.AuthenticateRequest
+	(*AuthenticateResponse)(nil),             // 4: authforge.identity.v1.AuthenticateResponse
+	(*GetUserRequest)(nil),                   // 5: authforge.identity.v1.GetUserRequest
+	(*GetUserResponse)(nil),                  // 6: authforge.identity.v1.GetUserResponse
+	(*RequestEmailVerificationRequest)(nil),  // 7: authforge.identity.v1.RequestEmailVerificationRequest
+	(*RequestEmailVerificationResponse)(nil), // 8: authforge.identity.v1.RequestEmailVerificationResponse
+	(*VerifyEmailRequest)(nil),               // 9: authforge.identity.v1.VerifyEmailRequest
+	(*VerifyEmailResponse)(nil),              // 10: authforge.identity.v1.VerifyEmailResponse
 }
 var file_authforge_identity_v1_identity_proto_depIdxs = []int32{
-	0, // 0: authforge.identity.v1.CreateUserResponse.user:type_name -> authforge.identity.v1.User
-	0, // 1: authforge.identity.v1.AuthenticateResponse.user:type_name -> authforge.identity.v1.User
-	0, // 2: authforge.identity.v1.GetUserResponse.user:type_name -> authforge.identity.v1.User
-	1, // 3: authforge.identity.v1.IdentityService.CreateUser:input_type -> authforge.identity.v1.CreateUserRequest
-	3, // 4: authforge.identity.v1.IdentityService.Authenticate:input_type -> authforge.identity.v1.AuthenticateRequest
-	5, // 5: authforge.identity.v1.IdentityService.GetUser:input_type -> authforge.identity.v1.GetUserRequest
-	2, // 6: authforge.identity.v1.IdentityService.CreateUser:output_type -> authforge.identity.v1.CreateUserResponse
-	4, // 7: authforge.identity.v1.IdentityService.Authenticate:output_type -> authforge.identity.v1.AuthenticateResponse
-	6, // 8: authforge.identity.v1.IdentityService.GetUser:output_type -> authforge.identity.v1.GetUserResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	0,  // 0: authforge.identity.v1.CreateUserResponse.user:type_name -> authforge.identity.v1.User
+	0,  // 1: authforge.identity.v1.AuthenticateResponse.user:type_name -> authforge.identity.v1.User
+	0,  // 2: authforge.identity.v1.GetUserResponse.user:type_name -> authforge.identity.v1.User
+	1,  // 3: authforge.identity.v1.IdentityService.CreateUser:input_type -> authforge.identity.v1.CreateUserRequest
+	3,  // 4: authforge.identity.v1.IdentityService.Authenticate:input_type -> authforge.identity.v1.AuthenticateRequest
+	5,  // 5: authforge.identity.v1.IdentityService.GetUser:input_type -> authforge.identity.v1.GetUserRequest
+	7,  // 6: authforge.identity.v1.IdentityService.RequestEmailVerification:input_type -> authforge.identity.v1.RequestEmailVerificationRequest
+	9,  // 7: authforge.identity.v1.IdentityService.VerifyEmail:input_type -> authforge.identity.v1.VerifyEmailRequest
+	2,  // 8: authforge.identity.v1.IdentityService.CreateUser:output_type -> authforge.identity.v1.CreateUserResponse
+	4,  // 9: authforge.identity.v1.IdentityService.Authenticate:output_type -> authforge.identity.v1.AuthenticateResponse
+	6,  // 10: authforge.identity.v1.IdentityService.GetUser:output_type -> authforge.identity.v1.GetUserResponse
+	8,  // 11: authforge.identity.v1.IdentityService.RequestEmailVerification:output_type -> authforge.identity.v1.RequestEmailVerificationResponse
+	10, // 12: authforge.identity.v1.IdentityService.VerifyEmail:output_type -> authforge.identity.v1.VerifyEmailResponse
+	8,  // [8:13] is the sub-list for method output_type
+	3,  // [3:8] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_authforge_identity_v1_identity_proto_init() }
@@ -505,7 +708,7 @@ func file_authforge_identity_v1_identity_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_authforge_identity_v1_identity_proto_rawDesc), len(file_authforge_identity_v1_identity_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

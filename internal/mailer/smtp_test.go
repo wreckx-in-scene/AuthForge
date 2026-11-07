@@ -25,6 +25,16 @@ func TestPasswordResetURLRejectsInsecurePublicURL(t *testing.T) {
 	}
 }
 
+func TestEmailVerificationURL(t *testing.T) {
+	got, err := EmailVerificationURL("https://accounts.example/verify", "env-123", "af_ev_secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "https://accounts.example/verify?environment_id=env-123&token=af_ev_secret" {
+		t.Fatalf("unexpected verification URL: %s", got)
+	}
+}
+
 func TestNewSMTPRequiresTLSForCredentials(t *testing.T) {
 	if _, err := NewSMTP("smtp.example:587", "AuthForge <no-reply@example.com>", "user", "password", false); err == nil {
 		t.Fatal("expected SMTP credentials without STARTTLS to be rejected")

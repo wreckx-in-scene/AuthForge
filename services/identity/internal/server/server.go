@@ -11,6 +11,7 @@ import (
 	identityv1 "github.com/wreckx-in-scene/AuthForge/gen/authforge/identity/v1"
 	"github.com/wreckx-in-scene/AuthForge/internal/errs"
 	"github.com/wreckx-in-scene/AuthForge/internal/id"
+	"github.com/wreckx-in-scene/AuthForge/internal/mailer"
 	"github.com/wreckx-in-scene/AuthForge/internal/normalize"
 	"github.com/wreckx-in-scene/AuthForge/internal/password"
 	"github.com/wreckx-in-scene/AuthForge/internal/statusx"
@@ -19,12 +20,14 @@ import (
 
 type Server struct {
 	identityv1.UnimplementedIdentityServiceServer
-	store *store.Store
-	log   *slog.Logger
+	store           *store.Store
+	verificationURL string
+	mailer          mailer.EmailVerificationSender
+	log             *slog.Logger
 }
 
-func New(st *store.Store, log *slog.Logger) *Server {
-	return &Server{store: st, log: log}
+func New(st *store.Store, verificationURL string, emailSender mailer.EmailVerificationSender, log *slog.Logger) *Server {
+	return &Server{store: st, verificationURL: verificationURL, mailer: emailSender, log: log}
 }
 
 func (s *Server) CreateUser(ctx context.Context, req *identityv1.CreateUserRequest) (*identityv1.CreateUserResponse, error) {
@@ -42,6 +45,9 @@ func (s *Server) CreateUser(ctx context.Context, req *identityv1.CreateUserReque
 	user, err := s.store.CreateUser(ctx, req.GetEnvironmentId(), req.GetProjectId(), display, normalized, hash)
 	if err != nil {
 		return nil, statusx.Fail(s.log, err, "email_already_registered")
+	}
+	if err := s.sendVerification(ctx, user.EnvironmentID, user.Email, normalized); err != nil {
+		s.log.Error("verification email could not be sent after signup", "user_id", user.ID, "err", err)
 	}
 	return &identityv1.CreateUserResponse{User: toProto(user)}, nil
 }
@@ -79,6 +85,58 @@ func (s *Server) GetUser(ctx context.Context, req *identityv1.GetUserRequest) (*
 		return nil, statusx.Fail(s.log, err, "")
 	}
 	return &identityv1.GetUserResponse{User: toProto(user)}, nil
+}
+
+func (s *Server) RequestEmailVerification(ctx context.Context, req *identityv1.RequestEmailVerificationRequest) (*identityv1.RequestEmailVerificationResponse, error) {
+	_, normalized, err := normalize.Email(req.GetEmail())
+	if err != nil || id.Parse(req.GetEnvironmentId()) != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid_argument")
+	}
+	email, verificationToken, err := s.store.CreateEmailVerificationToken(ctx, req.GetEnvironmentId(), normalized)
+	if errors.Is(err, errs.ErrNotFound) {
+		return &identityv1.RequestEmailVerificationResponse{}, nil
+	}
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	if verificationToken != "" {
+		if err := s.sendVerificationLink(ctx, req.GetEnvironmentId(), email, verificationToken); err != nil {
+			s.log.Error("verification email delivery failed", "err", err)
+		}
+	}
+	return &identityv1.RequestEmailVerificationResponse{}, nil
+}
+
+func (s *Server) VerifyEmail(ctx context.Context, req *identityv1.VerifyEmailRequest) (*identityv1.VerifyEmailResponse, error) {
+	if req.GetToken() == "" || id.Parse(req.GetEnvironmentId()) != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid_verification_token")
+	}
+	if err := s.store.VerifyEmail(ctx, req.GetEnvironmentId(), req.GetToken()); err != nil {
+		if errors.Is(err, errs.ErrUnauthenticated) || errors.Is(err, errs.ErrNotFound) {
+			return nil, status.Error(codes.Unauthenticated, "invalid_verification_token")
+		}
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	return &identityv1.VerifyEmailResponse{Verified: true}, nil
+}
+
+func (s *Server) sendVerification(ctx context.Context, environmentID, email, normalizedEmail string) error {
+	_, verificationToken, err := s.store.CreateEmailVerificationToken(ctx, environmentID, normalizedEmail)
+	if err != nil {
+		return err
+	}
+	if verificationToken == "" {
+		return nil
+	}
+	return s.sendVerificationLink(ctx, environmentID, email, verificationToken)
+}
+
+func (s *Server) sendVerificationLink(ctx context.Context, environmentID, email, verificationToken string) error {
+	link, err := mailer.EmailVerificationURL(s.verificationURL, environmentID, verificationToken)
+	if err != nil {
+		return err
+	}
+	return s.mailer.SendEmailVerification(ctx, email, link)
 }
 
 func toProto(user store.User) *identityv1.User {

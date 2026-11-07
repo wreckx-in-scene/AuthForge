@@ -76,6 +76,26 @@ Both return `access_token`, `expires_at`, and `account`.
 
 The environment comes from the API key, not the body.
 
+New application users receive an email verification link automatically. Verification links expire after 24 hours and work once. `email_verified` remains false in tokens issued before verification; sign in or refresh after verifying to receive a token with the updated claim.
+
+`POST /v1/email/verification/request`
+
+Requires the environment's `X-Api-Key`.
+
+```json
+{ "email": "student@campus.edu" }
+```
+
+Returns `{"status":"ok"}` whether or not a matching user exists.
+
+`POST /v1/email/verification/confirm`
+
+```json
+{ "environment_id": "<uuid>", "token": "af_ev_..." }
+```
+
+Returns `{"verified":true}` on success. Expired, unknown, or previously used tokens return `401` with `invalid_verification_token`.
+
 `POST /v1/token/refresh`
 
 ```json
@@ -105,4 +125,5 @@ Failures use `{ "error": "<code>" }`.
 | `not_found` | Project or environment does not exist |
 | `account_disabled` | The application user is not active |
 | `refresh_reuse_detected` | A used refresh token was presented |
+| `invalid_verification_token` | Email verification token is invalid, expired, or already used |
 | `unauthenticated` | Console or access token was rejected |

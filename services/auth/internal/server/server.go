@@ -113,6 +113,28 @@ func (s *Server) Logout(ctx context.Context, req *authv1.LogoutRequest) (*authv1
 	return &authv1.LogoutResponse{SessionId: revoked.GetSessionId()}, nil
 }
 
+func (s *Server) RequestEmailVerification(ctx context.Context, req *authv1.RequestEmailVerificationRequest) (*authv1.RequestEmailVerificationResponse, error) {
+	_, err := s.identity.RequestEmailVerification(ctx, &identityv1.RequestEmailVerificationRequest{
+		EnvironmentId: req.GetEnvironmentId(),
+		Email:         req.GetEmail(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	return &authv1.RequestEmailVerificationResponse{}, nil
+}
+
+func (s *Server) VerifyEmail(ctx context.Context, req *authv1.VerifyEmailRequest) (*authv1.VerifyEmailResponse, error) {
+	verified, err := s.identity.VerifyEmail(ctx, &identityv1.VerifyEmailRequest{
+		EnvironmentId: req.GetEnvironmentId(),
+		Token:         req.GetToken(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	return &authv1.VerifyEmailResponse{Verified: verified.GetVerified()}, nil
+}
+
 func (s *Server) VerificationKeys(context.Context, *authv1.VerificationKeysRequest) (*authv1.VerificationKeysResponse, error) {
 	return &authv1.VerificationKeysResponse{
 		Kid:       s.signer.KID(),

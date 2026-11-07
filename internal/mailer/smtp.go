@@ -18,6 +18,10 @@ type PasswordResetSender interface {
 	SendPasswordReset(context.Context, string, string) error
 }
 
+type EmailVerificationSender interface {
+	SendEmailVerification(context.Context, string, string) error
+}
+
 type SMTP struct {
 	addr     string
 	host     string
@@ -57,26 +61,66 @@ func NewSMTP(addr, from, username, password string, startTLS bool) (*SMTP, error
 }
 
 func PasswordResetURL(baseURL, token string) (string, error) {
-	u, err := url.Parse(baseURL)
+	u, err := tokenURL(baseURL, token)
 	if err != nil {
-		return "", fmt.Errorf("parse password reset URL: %w", err)
+		return "", err
 	}
-	if token == "" || u.Host == "" || u.User != nil || u.Fragment != "" {
-		return "", errors.New("password reset URL must be an absolute URL without credentials or fragment")
+	return u.String(), nil
+}
+
+func EmailVerificationURL(baseURL, environmentID, token string) (string, error) {
+	if environmentID == "" {
+		return "", errors.New("email verification URL requires an environment id")
 	}
-	if u.Scheme != "https" && !(u.Scheme == "http" && isLoopbackHost(u.Hostname())) {
-		return "", errors.New("password reset URL must use HTTPS except on loopback")
+	u, err := tokenURL(baseURL, token)
+	if err != nil {
+		return "", err
 	}
 	query := u.Query()
-	query.Set("token", token)
+	query.Set("environment_id", environmentID)
 	u.RawQuery = query.Encode()
 	return u.String(), nil
 }
 
+func tokenURL(baseURL, token string) (*url.URL, error) {
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse email action URL: %w", err)
+	}
+	if token == "" || u.Host == "" || u.User != nil || u.Fragment != "" {
+		return nil, errors.New("email action URL must be absolute and cannot contain credentials or a fragment")
+	}
+	if u.Scheme != "https" && !(u.Scheme == "http" && isLoopbackHost(u.Hostname())) {
+		return nil, errors.New("email action URL must use HTTPS except on loopback")
+	}
+	query := u.Query()
+	query.Set("token", token)
+	u.RawQuery = query.Encode()
+	return u, nil
+}
+
 func (s *SMTP) SendPasswordReset(ctx context.Context, recipient, link string) error {
+	body := fmt.Sprintf(
+		"Use the link below to reset your AuthForge password. It expires in 30 minutes and can only be used once.\r\n\r\n%s\r\n\r\n"+
+			"If you did not request this, you can ignore this email.\r\n",
+		link,
+	)
+	return s.send(ctx, recipient, "Reset your AuthForge password", body)
+}
+
+func (s *SMTP) SendEmailVerification(ctx context.Context, recipient, link string) error {
+	body := fmt.Sprintf(
+		"Use the link below to verify your AuthForge email address. It expires in 24 hours and can only be used once.\r\n\r\n%s\r\n\r\n"+
+			"If you did not create this account, you can ignore this email.\r\n",
+		link,
+	)
+	return s.send(ctx, recipient, "Verify your AuthForge email address", body)
+}
+
+func (s *SMTP) send(ctx context.Context, recipient, subject, body string) error {
 	to, err := mail.ParseAddress(recipient)
 	if err != nil {
-		return fmt.Errorf("parse reset email address: %w", err)
+		return fmt.Errorf("parse email address: %w", err)
 	}
 
 	conn, err := (&net.Dialer{Timeout: 10 * time.Second}).DialContext(ctx, "tcp", s.addr)
@@ -127,12 +171,11 @@ func (s *SMTP) SendPasswordReset(ctx context.Context, recipient, link string) er
 		return fmt.Errorf("start SMTP message: %w", err)
 	}
 	message := fmt.Sprintf(
-		"From: %s\r\nTo: %s\r\nSubject: Reset your AuthForge password\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n"+
-			"Use the link below to reset your AuthForge password. It expires in 30 minutes and can only be used once.\r\n\r\n%s\r\n\r\n"+
-			"If you did not request this, you can ignore this email.\r\n",
+		"From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s",
 		s.from.String(),
 		to.String(),
-		link,
+		subject,
+		body,
 	)
 	if _, err := writer.Write([]byte(message)); err != nil {
 		_ = writer.Close()

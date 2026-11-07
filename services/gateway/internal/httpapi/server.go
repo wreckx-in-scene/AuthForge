@@ -69,6 +69,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/api-keys", s.issueAPIKey)
 	mux.HandleFunc("POST /v1/signup", s.signup)
 	mux.HandleFunc("POST /v1/login", s.login)
+	mux.HandleFunc("POST /v1/email/verification/request", s.requestEmailVerification)
+	mux.HandleFunc("POST /v1/email/verification/confirm", s.verifyEmail)
 	mux.HandleFunc("POST /v1/token/refresh", s.refresh)
 	mux.HandleFunc("POST /v1/logout", s.logout)
 	mux.HandleFunc("GET /v1/me", s.me)
@@ -279,6 +281,51 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	s.passwordAuth(w, r, false)
+}
+
+func (s *Server) requestEmailVerification(w http.ResponseWriter, r *http.Request) {
+	resolved, ok := s.resolveKey(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		Email string `json:"email"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	_, err := s.auth.RequestEmailVerification(ctx, &authv1.RequestEmailVerificationRequest{
+		EnvironmentId: resolved.GetEnvironmentId(),
+		Email:         body.Email,
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (s *Server) verifyEmail(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		EnvironmentID string `json:"environment_id"`
+		Token         string `json:"token"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.auth.VerifyEmail(ctx, &authv1.VerifyEmailRequest{
+		EnvironmentId: body.EnvironmentID,
+		Token:         body.Token,
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"verified": resp.GetVerified()})
 }
 
 func (s *Server) passwordAuth(w http.ResponseWriter, r *http.Request, signup bool) {
@@ -497,7 +544,7 @@ func writeStatus(w http.ResponseWriter, err error) {
 
 func publicMessage(msg string) bool {
 	switch msg {
-	case "invalid_argument", "invalid_credentials", "invalid_api_key", "email_already_registered", "slug_taken", "forbidden", "not_found", "account_disabled", "refresh_reuse_detected", "unauthenticated", "invalid_reset_token", "internal", "already_exists":
+	case "invalid_argument", "invalid_credentials", "invalid_api_key", "email_already_registered", "slug_taken", "forbidden", "not_found", "account_disabled", "refresh_reuse_detected", "unauthenticated", "invalid_reset_token", "invalid_verification_token", "internal", "already_exists":
 		return true
 	default:
 		return false
