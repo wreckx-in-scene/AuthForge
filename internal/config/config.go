@@ -3,38 +3,32 @@ package config
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
-type Config struct {
-	GRPCPort    string
-	DatabaseURL string
-
-	// PlatformJWTSecret signs tokens for platform accounts (AccountLogin) —
-	// this has no per-project context, so it lives in env config, not the DB.
-	// Tenant-user tokens use each project's own jwt_secret column instead.
-	PlatformJWTSecret string
-}
-
-func Load() (*Config, error) {
-	cfg := &Config{
-		GRPCPort:          getEnv("GRPC_PORT", "50051"),
-		DatabaseURL:       getEnv("DATABASE_URL", ""),
-		PlatformJWTSecret: getEnv("PLATFORM_JWT_SECRET", ""),
-	}
-
-	if cfg.DatabaseURL == "" {
-		return nil, fmt.Errorf("DATABASE_URL is required")
-	}
-	if cfg.PlatformJWTSecret == "" {
-		return nil, fmt.Errorf("PLATFORM_JWT_SECRET is required")
-	}
-
-	return cfg, nil
-}
-
-func getEnv(key, fallback string) string {
+func String(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
 	}
 	return fallback
+}
+
+func Require(key string) (string, error) {
+	v := os.Getenv(key)
+	if v == "" {
+		return "", fmt.Errorf("%s is required", key)
+	}
+	return v, nil
+}
+
+func Duration(key, fallback string) (time.Duration, error) {
+	raw := String(key, fallback)
+	d, err := time.ParseDuration(raw)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", key, err)
+	}
+	if d <= 0 {
+		return 0, fmt.Errorf("%s must be positive", key)
+	}
+	return d, nil
 }
