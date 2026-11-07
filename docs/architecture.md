@@ -34,6 +34,8 @@ API gateway
 
 Postgres is the primary data dependency. The tenant service sends console password-reset messages and the identity service sends application-user verification messages through configured SMTP; local Compose captures them in Mailpit. Each service owns a schema: `tenant`, `identity`, and `session`. The auth service and the gateway do not own tables.
 
+The gateway rate-limits signup, login, reset, and verification endpoints by the direct TCP peer IP. This first implementation is process-local; horizontal deployments need a shared limiter and an explicitly trusted proxy boundary before forwarding client IPs.
+
 | Service   | Public port | Talks to                          |
 |-----------|-------------|-----------------------------------|
 | gateway   | 8080        | tenant, auth                      |

@@ -4,6 +4,12 @@ The gateway listens on port 8080. Console routes take `Authorization: Bearer <co
 
 Tokens are returned once. API keys and refresh tokens are not recoverable later.
 
+## Rate limits
+
+The gateway applies per-source-IP token-bucket limits to authentication endpoints: signup and login have a burst of 10 and refill at 10 per minute; password-reset and verification email requests share a burst of 3 and refill at 3 per 15 minutes; reset and verification confirmations share a burst of 5 and refill at 5 per minute. Requests exceeding a limit return `429` with `{ "error": "rate_limited" }` and a `Retry-After` header. The gateway uses the TCP peer address and does not trust `X-Forwarded-For`.
+
+These limits are in-memory and apply per gateway process. Multi-instance deployments need a shared limiter, and deployments behind a reverse proxy need trusted-proxy client IP handling before the gateway can accurately apply per-client limits.
+
 ## Password reset
 
 `POST /v1/password-reset/request`
@@ -126,4 +132,5 @@ Failures use `{ "error": "<code>" }`.
 | `account_disabled` | The application user is not active |
 | `refresh_reuse_detected` | A used refresh token was presented |
 | `invalid_verification_token` | Email verification token is invalid, expired, or already used |
+| `rate_limited` | Too many requests; wait for the `Retry-After` duration |
 | `unauthenticated` | Console or access token was rejected |

@@ -24,10 +24,14 @@ type Server struct {
 	consoleSecret []byte
 	issuer        string
 	log           *slog.Logger
+	rateLimiter   *rateLimiter
 }
 
 func New(tenant tenantv1.TenantServiceClient, auth authv1.AuthServiceClient, verifier *token.Verifier, consoleSecret []byte, issuer string, log *slog.Logger) *Server {
-	return &Server{tenant: tenant, auth: auth, verifier: verifier, consoleSecret: consoleSecret, issuer: issuer, log: log}
+	return &Server{
+		tenant: tenant, auth: auth, verifier: verifier, consoleSecret: consoleSecret,
+		issuer: issuer, log: log, rateLimiter: newRateLimiter(),
+	}
 }
 
 func LoadVerifier(ctx context.Context, authClient authv1.AuthServiceClient, issuer string) (*token.Verifier, error) {
@@ -74,7 +78,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/token/refresh", s.refresh)
 	mux.HandleFunc("POST /v1/logout", s.logout)
 	mux.HandleFunc("GET /v1/me", s.me)
-	return mux
+	return rateLimitMiddleware(mux, s.rateLimiter)
 }
 
 func (s *Server) consoleSignup(w http.ResponseWriter, r *http.Request) {
