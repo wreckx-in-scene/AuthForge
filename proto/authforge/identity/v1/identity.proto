@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package authforge.identity.v1;
+
+option go_package = "github.com/wreckx-in-scene/AuthForge/gen/authforge/identity/v1;identityv1";
+
+service IdentityService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+message User {
+  string id = 1;
+  string environment_id = 2;
+  string project_id = 3;
+  string email = 4;
+  bool email_verified = 5;
+  string status = 6;
+}
+
+message CreateUserRequest {
+  string environment_id = 1;
+  string project_id = 2;
+  string email = 3;
+  string password = 4;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message AuthenticateRequest {
+  string environment_id = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message AuthenticateResponse {
+  User user = 1;
+}
+
+message GetUserRequest {
+  string environment_id = 1;
+  string user_id = 2;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
