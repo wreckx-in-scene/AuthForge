@@ -7,6 +7,8 @@ option go_package = "github.com/wreckx-in-scene/AuthForge/gen/authforge/tenant/v
 service TenantService {
   rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
   rpc LoginAccount(LoginAccountRequest) returns (LoginAccountResponse);
+  rpc RequestPasswordReset(RequestPasswordResetRequest) returns (RequestPasswordResetResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
   rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse);
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
   rpc CreateEnvironment(CreateEnvironmentRequest) returns (CreateEnvironmentResponse);
@@ -41,6 +43,24 @@ message LoginAccountResponse {
   string access_token = 1;
   int64 expires_at = 2;
   Account account = 3;
+}
+
+message RequestPasswordResetRequest {
+  string email = 1;
+}
+
+message RequestPasswordResetResponse {
+  string reset_token = 1;
+  int64 expires_at = 2;
+}
+
+message ResetPasswordRequest {
+  string reset_token = 1;
+  string password = 2;
+}
+
+message ResetPasswordResponse {
+  bool ok = 1;
 }
 
 message CreateOrganizationRequest {

@@ -2,12 +2,16 @@ package store
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/wreckx-in-scene/AuthForge/internal/digest"
 	"github.com/wreckx-in-scene/AuthForge/internal/errs"
 	"github.com/wreckx-in-scene/AuthForge/internal/id"
 	"github.com/wreckx-in-scene/AuthForge/internal/pgerr"
@@ -94,6 +98,104 @@ func (s *Store) FindAccount(ctx context.Context, normalized string) (Account, st
 		return Account{}, "", err
 	}
 	return account, hash, nil
+}
+
+func (s *Store) RequestPasswordReset(ctx context.Context, normalized string) (string, time.Time, error) {
+	var account Account
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, email, name
+		FROM tenant.accounts
+		WHERE normalized_email = $1
+	`, normalized).Scan(&account.ID, &account.Email, &account.Name)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", time.Time{}, errs.ErrNotFound
+	}
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	resetToken, err := newPasswordResetToken()
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	expiresAt := time.Now().UTC().Add(30 * time.Minute)
+	_, err = s.pool.Exec(ctx, `
+		DELETE FROM tenant.password_reset_tokens
+		WHERE account_id = $1
+	`, account.ID)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO tenant.password_reset_tokens (id, account_id, token_hash, expires_at)
+		VALUES ($1, $2, $3, $4)
+	`, uuid.NewString(), account.ID, digest.SHA256(resetToken), expiresAt)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return resetToken, expiresAt, nil
+}
+
+func (s *Store) ResetPassword(ctx context.Context, resetToken, newPasswordHash string) (string, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(ctx)
+
+	var accountID string
+	var expiresAt time.Time
+	var usedAt *time.Time
+	err = tx.QueryRow(ctx, `
+		SELECT account_id::text, expires_at, used_at
+		FROM tenant.password_reset_tokens
+		WHERE token_hash = $1
+		FOR UPDATE
+	`, digest.SHA256(resetToken)).Scan(&accountID, &expiresAt, &usedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", errs.ErrUnauthenticated
+	}
+	if err != nil {
+		return "", err
+	}
+	now := time.Now().UTC()
+	if usedAt != nil || !now.Before(expiresAt) {
+		if _, updateErr := tx.Exec(ctx, `
+			UPDATE tenant.password_reset_tokens
+			SET used_at = COALESCE(used_at, now())
+			WHERE token_hash = $1
+		`, digest.SHA256(resetToken)); updateErr != nil {
+			return "", updateErr
+		}
+		return "", errs.ErrUnauthenticated
+	}
+	_, err = tx.Exec(ctx, `
+		UPDATE tenant.accounts
+		SET password_hash = $1
+		WHERE id = $2
+	`, newPasswordHash, accountID)
+	if err != nil {
+		return "", err
+	}
+	_, err = tx.Exec(ctx, `
+		UPDATE tenant.password_reset_tokens
+		SET used_at = now()
+		WHERE token_hash = $1
+	`, digest.SHA256(resetToken))
+	if err != nil {
+		return "", err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return "", err
+	}
+	return accountID, nil
+}
+
+func newPasswordResetToken() (string, error) {
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+	return "af_pr_" + hex.EncodeToString(raw), nil
 }
 
 func (s *Store) CreateOrganization(ctx context.Context, accountID, name, slug string) (Organization, error) {

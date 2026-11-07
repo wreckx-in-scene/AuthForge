@@ -22,6 +22,15 @@ curl -s -X POST localhost:8080/v1/console/signup -H "content-type: application/j
 
 Use the returned console token as `Authorization: Bearer ...` for `/v1/organizations`, `/v1/projects`, `/v1/environments`, and `/v1/api-keys`. Signup and login for an application user send that API key in `X-Api-Key`.
 
+## Password reset
+
+Console accounts can request a password reset token through the gateway. The token is short-lived and invalid after use or expiry.
+
+```bash
+curl -s -X POST localhost:8080/v1/password-reset/request -H 'content-type: application/json' -d '{"email":"ada@campus.edu"}'
+curl -s -X POST localhost:8080/v1/password-reset/confirm -H 'content-type: application/json' -d '{"reset_token":"af_pr_...","password":"new-password-123"}'
+```
+
 ## Tests
 
 ```bash

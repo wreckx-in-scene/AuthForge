@@ -90,6 +90,39 @@ func (s *Server) LoginAccount(ctx context.Context, req *tenantv1.LoginAccountReq
 	}, nil
 }
 
+func (s *Server) RequestPasswordReset(ctx context.Context, req *tenantv1.RequestPasswordResetRequest) (*tenantv1.RequestPasswordResetResponse, error) {
+	_, normalized, err := normalize.Email(req.GetEmail())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid_argument")
+	}
+	resetToken, expiresAt, err := s.store.RequestPasswordReset(ctx, normalized)
+	if errors.Is(err, errs.ErrNotFound) {
+		return &tenantv1.RequestPasswordResetResponse{}, nil
+	}
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	return &tenantv1.RequestPasswordResetResponse{ResetToken: resetToken, ExpiresAt: expiresAt.Unix()}, nil
+}
+
+func (s *Server) ResetPassword(ctx context.Context, req *tenantv1.ResetPasswordRequest) (*tenantv1.ResetPasswordResponse, error) {
+	if req.GetResetToken() == "" {
+		return nil, status.Error(codes.Unauthenticated, "invalid_reset_token")
+	}
+	hash, err := password.Hash(req.GetPassword())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid_argument")
+	}
+	_, err = s.store.ResetPassword(ctx, req.GetResetToken(), hash)
+	if errors.Is(err, errs.ErrUnauthenticated) {
+		return nil, status.Error(codes.Unauthenticated, "invalid_reset_token")
+	}
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	return &tenantv1.ResetPasswordResponse{Ok: true}, nil
+}
+
 func (s *Server) CreateOrganization(ctx context.Context, req *tenantv1.CreateOrganizationRequest) (*tenantv1.CreateOrganizationResponse, error) {
 	name, err := personName(req.GetName())
 	if err != nil {

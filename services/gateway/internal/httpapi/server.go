@@ -61,6 +61,8 @@ func (s *Server) Handler() http.Handler {
 	})
 	mux.HandleFunc("POST /v1/console/signup", s.consoleSignup)
 	mux.HandleFunc("POST /v1/console/login", s.consoleLogin)
+	mux.HandleFunc("POST /v1/password-reset/request", s.requestPasswordReset)
+	mux.HandleFunc("POST /v1/password-reset/confirm", s.confirmPasswordReset)
 	mux.HandleFunc("POST /v1/organizations", s.createOrganization)
 	mux.HandleFunc("POST /v1/projects", s.createProject)
 	mux.HandleFunc("POST /v1/environments", s.createEnvironment)
@@ -116,6 +118,46 @@ func (s *Server) consoleLogin(w http.ResponseWriter, r *http.Request) {
 		"expires_at":   resp.GetExpiresAt(),
 		"account":      accountJSON(resp.GetAccount()),
 	})
+}
+
+func (s *Server) requestPasswordReset(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Email string `json:"email"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.RequestPasswordReset(ctx, &tenantv1.RequestPasswordResetRequest{Email: body.Email})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	payload := map[string]any{"status": "ok"}
+	if resp.GetResetToken() != "" {
+		payload["reset_token"] = resp.GetResetToken()
+		payload["expires_at"] = resp.GetExpiresAt()
+	}
+	writeJSON(w, http.StatusOK, payload)
+}
+
+func (s *Server) confirmPasswordReset(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ResetToken string `json:"reset_token"`
+		Password   string `json:"password"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.ResetPassword(ctx, &tenantv1.ResetPasswordRequest{ResetToken: body.ResetToken, Password: body.Password})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": resp.GetOk()})
 }
 
 func (s *Server) createOrganization(w http.ResponseWriter, r *http.Request) {
@@ -460,7 +502,7 @@ func writeStatus(w http.ResponseWriter, err error) {
 
 func publicMessage(msg string) bool {
 	switch msg {
-	case "invalid_argument", "invalid_credentials", "invalid_api_key", "email_already_registered", "slug_taken", "forbidden", "not_found", "account_disabled", "refresh_reuse_detected", "unauthenticated", "internal", "already_exists":
+	case "invalid_argument", "invalid_credentials", "invalid_api_key", "email_already_registered", "slug_taken", "forbidden", "not_found", "account_disabled", "refresh_reuse_detected", "unauthenticated", "invalid_reset_token", "internal", "already_exists":
 		return true
 	default:
 		return false

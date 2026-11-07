@@ -19,13 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TenantService_CreateAccount_FullMethodName      = "/authforge.tenant.v1.TenantService/CreateAccount"
-	TenantService_LoginAccount_FullMethodName       = "/authforge.tenant.v1.TenantService/LoginAccount"
-	TenantService_CreateOrganization_FullMethodName = "/authforge.tenant.v1.TenantService/CreateOrganization"
-	TenantService_CreateProject_FullMethodName      = "/authforge.tenant.v1.TenantService/CreateProject"
-	TenantService_CreateEnvironment_FullMethodName  = "/authforge.tenant.v1.TenantService/CreateEnvironment"
-	TenantService_IssueAPIKey_FullMethodName        = "/authforge.tenant.v1.TenantService/IssueAPIKey"
-	TenantService_ResolveAPIKey_FullMethodName      = "/authforge.tenant.v1.TenantService/ResolveAPIKey"
+	TenantService_CreateAccount_FullMethodName        = "/authforge.tenant.v1.TenantService/CreateAccount"
+	TenantService_LoginAccount_FullMethodName         = "/authforge.tenant.v1.TenantService/LoginAccount"
+	TenantService_RequestPasswordReset_FullMethodName = "/authforge.tenant.v1.TenantService/RequestPasswordReset"
+	TenantService_ResetPassword_FullMethodName        = "/authforge.tenant.v1.TenantService/ResetPassword"
+	TenantService_CreateOrganization_FullMethodName   = "/authforge.tenant.v1.TenantService/CreateOrganization"
+	TenantService_CreateProject_FullMethodName        = "/authforge.tenant.v1.TenantService/CreateProject"
+	TenantService_CreateEnvironment_FullMethodName    = "/authforge.tenant.v1.TenantService/CreateEnvironment"
+	TenantService_IssueAPIKey_FullMethodName          = "/authforge.tenant.v1.TenantService/IssueAPIKey"
+	TenantService_ResolveAPIKey_FullMethodName        = "/authforge.tenant.v1.TenantService/ResolveAPIKey"
 )
 
 // TenantServiceClient is the client API for TenantService service.
@@ -34,6 +36,8 @@ const (
 type TenantServiceClient interface {
 	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*CreateAccountResponse, error)
 	LoginAccount(ctx context.Context, in *LoginAccountRequest, opts ...grpc.CallOption) (*LoginAccountResponse, error)
+	RequestPasswordReset(ctx context.Context, in *RequestPasswordResetRequest, opts ...grpc.CallOption) (*RequestPasswordResetResponse, error)
+	ResetPassword(ctx context.Context, in *ResetPasswordRequest, opts ...grpc.CallOption) (*ResetPasswordResponse, error)
 	CreateOrganization(ctx context.Context, in *CreateOrganizationRequest, opts ...grpc.CallOption) (*CreateOrganizationResponse, error)
 	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*CreateProjectResponse, error)
 	CreateEnvironment(ctx context.Context, in *CreateEnvironmentRequest, opts ...grpc.CallOption) (*CreateEnvironmentResponse, error)
@@ -63,6 +67,26 @@ func (c *tenantServiceClient) LoginAccount(ctx context.Context, in *LoginAccount
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(LoginAccountResponse)
 	err := c.cc.Invoke(ctx, TenantService_LoginAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantServiceClient) RequestPasswordReset(ctx context.Context, in *RequestPasswordResetRequest, opts ...grpc.CallOption) (*RequestPasswordResetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RequestPasswordResetResponse)
+	err := c.cc.Invoke(ctx, TenantService_RequestPasswordReset_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantServiceClient) ResetPassword(ctx context.Context, in *ResetPasswordRequest, opts ...grpc.CallOption) (*ResetPasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResetPasswordResponse)
+	err := c.cc.Invoke(ctx, TenantService_ResetPassword_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +149,8 @@ func (c *tenantServiceClient) ResolveAPIKey(ctx context.Context, in *ResolveAPIK
 type TenantServiceServer interface {
 	CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountResponse, error)
 	LoginAccount(context.Context, *LoginAccountRequest) (*LoginAccountResponse, error)
+	RequestPasswordReset(context.Context, *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error)
+	ResetPassword(context.Context, *ResetPasswordRequest) (*ResetPasswordResponse, error)
 	CreateOrganization(context.Context, *CreateOrganizationRequest) (*CreateOrganizationResponse, error)
 	CreateProject(context.Context, *CreateProjectRequest) (*CreateProjectResponse, error)
 	CreateEnvironment(context.Context, *CreateEnvironmentRequest) (*CreateEnvironmentResponse, error)
@@ -145,6 +171,12 @@ func (UnimplementedTenantServiceServer) CreateAccount(context.Context, *CreateAc
 }
 func (UnimplementedTenantServiceServer) LoginAccount(context.Context, *LoginAccountRequest) (*LoginAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoginAccount not implemented")
+}
+func (UnimplementedTenantServiceServer) RequestPasswordReset(context.Context, *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestPasswordReset not implemented")
+}
+func (UnimplementedTenantServiceServer) ResetPassword(context.Context, *ResetPasswordRequest) (*ResetPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResetPassword not implemented")
 }
 func (UnimplementedTenantServiceServer) CreateOrganization(context.Context, *CreateOrganizationRequest) (*CreateOrganizationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrganization not implemented")
@@ -214,6 +246,42 @@ func _TenantService_LoginAccount_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TenantServiceServer).LoginAccount(ctx, req.(*LoginAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantService_RequestPasswordReset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestPasswordResetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).RequestPasswordReset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_RequestPasswordReset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).RequestPasswordReset(ctx, req.(*RequestPasswordResetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantService_ResetPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).ResetPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_ResetPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).ResetPassword(ctx, req.(*ResetPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -322,6 +390,14 @@ var TenantService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LoginAccount",
 			Handler:    _TenantService_LoginAccount_Handler,
+		},
+		{
+			MethodName: "RequestPasswordReset",
+			Handler:    _TenantService_RequestPasswordReset_Handler,
+		},
+		{
+			MethodName: "ResetPassword",
+			Handler:    _TenantService_ResetPassword_Handler,
 		},
 		{
 			MethodName: "CreateOrganization",
