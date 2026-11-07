@@ -1,0 +1,159 @@
+package server
+
+import (
+	"context"
+	"log/slog"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	authv1 "github.com/wreckx-in-scene/AuthForge/gen/authforge/auth/v1"
+	identityv1 "github.com/wreckx-in-scene/AuthForge/gen/authforge/identity/v1"
+	sessionv1 "github.com/wreckx-in-scene/AuthForge/gen/authforge/session/v1"
+	"github.com/wreckx-in-scene/AuthForge/internal/token"
+)
+
+type Server struct {
+	authv1.UnimplementedAuthServiceServer
+	identity identityv1.IdentityServiceClient
+	session  sessionv1.SessionServiceClient
+	signer   *token.Signer
+	log      *slog.Logger
+}
+
+func New(identity identityv1.IdentityServiceClient, session sessionv1.SessionServiceClient, signer *token.Signer, log *slog.Logger) *Server {
+	return &Server{identity: identity, session: session, signer: signer, log: log}
+}
+
+func (s *Server) SignUp(ctx context.Context, req *authv1.SignUpRequest) (*authv1.SignUpResponse, error) {
+	created, err := s.identity.CreateUser(ctx, &identityv1.CreateUserRequest{
+		EnvironmentId: req.GetEnvironmentId(),
+		ProjectId:     req.GetProjectId(),
+		Email:         req.GetEmail(),
+		Password:      req.GetPassword(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	return s.issue(ctx, created.GetUser())
+}
+
+func (s *Server) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.LoginResponse, error) {
+	authed, err := s.identity.Authenticate(ctx, &identityv1.AuthenticateRequest{
+		EnvironmentId: req.GetEnvironmentId(),
+		Email:         req.GetEmail(),
+		Password:      req.GetPassword(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	user := authed.GetUser()
+	if user.GetProjectId() != req.GetProjectId() {
+		return nil, status.Error(codes.PermissionDenied, "forbidden")
+	}
+	issued, err := s.issue(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return &authv1.LoginResponse{
+		AccessToken:     issued.AccessToken,
+		RefreshToken:    issued.RefreshToken,
+		AccessExpiresAt: issued.AccessExpiresAt,
+		UserId:          issued.UserId,
+		SessionId:       issued.SessionId,
+		EmailVerified:   issued.EmailVerified,
+	}, nil
+}
+
+func (s *Server) Refresh(ctx context.Context, req *authv1.RefreshRequest) (*authv1.RefreshResponse, error) {
+	rotated, err := s.session.RotateRefreshToken(ctx, &sessionv1.RotateRefreshTokenRequest{RefreshToken: req.GetRefreshToken()})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	loaded, err := s.identity.GetUser(ctx, &identityv1.GetUserRequest{
+		EnvironmentId: rotated.GetEnvironmentId(),
+		UserId:        rotated.GetUserId(),
+	})
+	if err != nil {
+		s.log.Error("user lookup failed after refresh rotation", "session_id", rotated.GetSessionId(), "err", err)
+		return nil, s.pass(err)
+	}
+	user := loaded.GetUser()
+	if user.GetStatus() != "active" || user.GetProjectId() != rotated.GetProjectId() {
+		_, _ = s.session.RevokeSession(ctx, &sessionv1.RevokeSessionRequest{
+			SessionId:     rotated.GetSessionId(),
+			EnvironmentId: rotated.GetEnvironmentId(),
+		})
+		return nil, status.Error(codes.PermissionDenied, "account_disabled")
+	}
+	access, exp, err := s.signer.SignAccess(user.GetId(), user.GetEnvironmentId(), user.GetProjectId(), rotated.GetSessionId(), user.GetEmailVerified(), now())
+	if err != nil {
+		s.log.Error("signing failed after refresh rotation", "session_id", rotated.GetSessionId(), "err", err)
+		return nil, status.Error(codes.Internal, "internal")
+	}
+	return &authv1.RefreshResponse{
+		AccessToken:     access,
+		RefreshToken:    rotated.GetRefreshToken(),
+		AccessExpiresAt: exp.Unix(),
+		UserId:          user.GetId(),
+		SessionId:       rotated.GetSessionId(),
+		EmailVerified:   user.GetEmailVerified(),
+	}, nil
+}
+
+func (s *Server) Logout(ctx context.Context, req *authv1.LogoutRequest) (*authv1.LogoutResponse, error) {
+	revoked, err := s.session.RevokeSession(ctx, &sessionv1.RevokeSessionRequest{
+		RefreshToken:  req.GetRefreshToken(),
+		SessionId:     req.GetSessionId(),
+		EnvironmentId: req.GetEnvironmentId(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	return &authv1.LogoutResponse{SessionId: revoked.GetSessionId()}, nil
+}
+
+func (s *Server) VerificationKeys(context.Context, *authv1.VerificationKeysRequest) (*authv1.VerificationKeysResponse, error) {
+	return &authv1.VerificationKeysResponse{
+		Kid:       s.signer.KID(),
+		PublicKey: s.signer.PublicKey(),
+		Alg:       "EdDSA",
+	}, nil
+}
+
+func (s *Server) issue(ctx context.Context, user *identityv1.User) (*authv1.SignUpResponse, error) {
+	created, err := s.session.CreateSession(ctx, &sessionv1.CreateSessionRequest{
+		EnvironmentId: user.GetEnvironmentId(),
+		ProjectId:     user.GetProjectId(),
+		UserId:        user.GetId(),
+	})
+	if err != nil {
+		s.log.Error("session create failed after identity commit", "user_id", user.GetId(), "err", err)
+		return nil, s.pass(err)
+	}
+	access, exp, err := s.signer.SignAccess(user.GetId(), user.GetEnvironmentId(), user.GetProjectId(), created.GetSessionId(), user.GetEmailVerified(), now())
+	if err != nil {
+		_, revokeErr := s.session.RevokeSession(ctx, &sessionv1.RevokeSessionRequest{
+			SessionId:     created.GetSessionId(),
+			EnvironmentId: created.GetEnvironmentId(),
+		})
+		s.log.Error("signing failed", "session_id", created.GetSessionId(), "revoke_err", revokeErr, "err", err)
+		return nil, status.Error(codes.Internal, "internal")
+	}
+	return &authv1.SignUpResponse{
+		AccessToken:     access,
+		RefreshToken:    created.GetRefreshToken(),
+		AccessExpiresAt: exp.Unix(),
+		UserId:          user.GetId(),
+		SessionId:       created.GetSessionId(),
+		EmailVerified:   user.GetEmailVerified(),
+	}, nil
+}
+
+func (s *Server) pass(err error) error {
+	if st, ok := status.FromError(err); ok && st.Code() != codes.OK {
+		return err
+	}
+	s.log.Error("downstream call failed", "err", err)
+	return status.Error(codes.Internal, "internal")
+}
