@@ -17,7 +17,7 @@ A developer can:
 5. Call a protected route with the access token.
 6. Rotate the refresh token, or revoke the session.
 
-Google OAuth, Kafka, the dashboard, hosted login, and the SDKs are later milestones. Application-user email verification and console password recovery use separate single-use SMTP links.
+Google Identity Services sign-in is available with a platform-owned client ID. Authorization-code redirect flows, Kafka, the dashboard, hosted login, and the SDKs are later milestones. Application-user email verification and console password recovery use separate single-use SMTP links.
 
 ## Runtime
 
@@ -35,6 +35,8 @@ API gateway
 Postgres is the primary data dependency. The tenant service sends console password-reset messages and the identity service sends application-user verification messages through configured SMTP; local Compose captures them in Mailpit. Each service owns a schema: `tenant`, `identity`, and `session`. The auth service and the gateway do not own tables.
 
 The gateway rate-limits signup, login, reset, and verification endpoints by the direct TCP peer IP. This first implementation is process-local; horizontal deployments need a shared limiter and an explicitly trusted proxy boundary before forwarding client IPs.
+
+Google sign-in uses a platform-owned client ID. The gateway binds each ID-token exchange to the environment selected by the API key; the auth service verifies Google's OIDC signature, issuer, audience, verified-email claim, and a one-time five-minute nonce. Identity stores the provider subject separately from credentials and links an existing user only on a verified matching email.
 
 | Service   | Public port | Talks to                          |
 |-----------|-------------|-----------------------------------|

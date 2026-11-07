@@ -12,6 +12,8 @@ service AuthService {
   rpc VerificationKeys(VerificationKeysRequest) returns (VerificationKeysResponse);
   rpc RequestEmailVerification(RequestEmailVerificationRequest) returns (RequestEmailVerificationResponse);
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc GoogleLogin(GoogleLoginRequest) returns (GoogleLoginResponse);
+  rpc CreateGoogleNonce(CreateGoogleNonceRequest) returns (CreateGoogleNonceResponse);
 }
 
 message SignUpRequest {
@@ -91,4 +93,28 @@ message VerifyEmailRequest {
 
 message VerifyEmailResponse {
   bool verified = 1;
+}
+
+message GoogleLoginRequest {
+  string environment_id = 1;
+  string project_id = 2;
+  string id_token = 3;
+  string nonce = 4;
+}
+
+message GoogleLoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 access_expires_at = 3;
+  string user_id = 4;
+  string session_id = 5;
+  bool email_verified = 6;
+}
+
+message CreateGoogleNonceRequest {
+  string environment_id = 1;
+}
+
+message CreateGoogleNonceResponse {
+  string nonce = 1;
 }

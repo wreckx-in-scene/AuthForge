@@ -90,7 +90,7 @@ Alternative. An outbox in identity that creates the session asynchronously. The 
 
 Tradeoff. The system can contain a user with no session, or a session whose tokens were never delivered. It must not contain a response whose tokens do not match a committed session. Callers recover by logging in.
 
-Email verification is not on this path. The access token says `email_verified: false`. A later project setting can require the claim. This milestone does not block login on mail delivery.
+Email verification is sent after the identity commit. The access token says `email_verified: false` until verification; this milestone does not block initial login on mail delivery.
 
 ## 9. Password and key storage
 
@@ -116,3 +116,11 @@ Migrations are not run automatically by every replica. Two containers applying t
 - A denylist of access-token ids. Short expiry is the revocation story for access tokens.
 - mTLS, Redis rate limits, and a JWKS HTTP document. The gateway already treats the auth service as the source of the verification key, which is the same relationship a JWKS URL will have.
 - Hosted login, dashboard, and SDKs. The curl flow against the gateway is the contract those clients will wrap.
+
+## 12. Google sign-in uses a verified ID-token exchange
+
+Decision. The MVP uses the platform-owned Google Identity Services client. The client requests a five-minute, single-use nonce through the environment API key, supplies it to Google, and exchanges the ID token and nonce through the gateway. Auth verifies the ID token using Google's OIDC discovery/JWKS, pins the configured client ID as audience, and requires Google's verified-email claim. Identity binds the Google subject to a user scoped to the same environment.
+
+Alternative. A server-side authorization-code redirect flow with per-project client credentials. That requires redirect URI management, PKCE/state handling, credential storage, and project configuration that the current console does not have.
+
+Tradeoff. The current endpoint supports clients that can use Google Identity Services, not a hosted redirect flow. A Google subject is linked to an existing user only when the verified email matches; the provider subject, not email, is the stable login identifier after linking. One-time nonces prevent replay of a previously exchanged ID token.

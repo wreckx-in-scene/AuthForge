@@ -82,6 +82,20 @@ Both return `access_token`, `expires_at`, and `account`.
 
 The environment comes from the API key, not the body.
 
+`POST /v1/oauth/google/nonce`
+
+Requires the environment's `X-Api-Key`. Returns a one-time nonce valid for five minutes. Pass this nonce to Google Identity Services and include it again when exchanging the returned ID token.
+
+`POST /v1/oauth/google`
+
+Requires the environment's `X-Api-Key`.
+
+```json
+{ "id_token": "<google-id-token>", "nonce": "<one-time-nonce>" }
+```
+
+Returns the standard AuthForge access and refresh token response. The ID token must have the configured platform Google client ID as audience, a valid Google OIDC signature and issuer, a verified email, and the matching unused nonce. Google sign-in returns `503` with `google_sign_in_unavailable` until `GOOGLE_CLIENT_ID` is configured.
+
 New application users receive an email verification link automatically. Verification links expire after 24 hours and work once. `email_verified` remains false in tokens issued before verification; sign in or refresh after verifying to receive a token with the updated claim.
 
 `POST /v1/email/verification/request`
@@ -132,5 +146,8 @@ Failures use `{ "error": "<code>" }`.
 | `account_disabled` | The application user is not active |
 | `refresh_reuse_detected` | A used refresh token was presented |
 | `invalid_verification_token` | Email verification token is invalid, expired, or already used |
+| `invalid_google_credential` | Google ID token, verified email, or one-time nonce was rejected |
+| `google_identity_conflict` | Google identity is already linked to a different account |
+| `google_sign_in_unavailable` | Google sign-in is disabled because no platform client ID is configured |
 | `rate_limited` | Too many requests; wait for the `Retry-After` duration |
 | `unauthenticated` | Console or access token was rejected |

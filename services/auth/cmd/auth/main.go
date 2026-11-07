@@ -6,7 +6,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -60,6 +62,16 @@ func run(ctx context.Context, log *slog.Logger) error {
 	if err != nil {
 		return err
 	}
+	var googleIDVerifier *oidc.IDTokenVerifier
+	if clientID := config.String("GOOGLE_CLIENT_ID", ""); clientID != "" {
+		providerCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		provider, err := oidc.NewProvider(providerCtx, "https://accounts.google.com")
+		if err != nil {
+			return err
+		}
+		googleIDVerifier = provider.Verifier(&oidc.Config{ClientID: clientID})
+	}
 	identityConn, err := grpc.NewClient(identityAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
@@ -71,7 +83,13 @@ func run(ctx context.Context, log *slog.Logger) error {
 	}
 	defer sessionConn.Close()
 
-	api := server.New(identityv1.NewIdentityServiceClient(identityConn), sessionv1.NewSessionServiceClient(sessionConn), signer, log)
+	api := server.New(
+		identityv1.NewIdentityServiceClient(identityConn),
+		sessionv1.NewSessionServiceClient(sessionConn),
+		signer,
+		googleIDVerifier,
+		log,
+	)
 	return serve.GRPC(ctx, ":"+config.String("HEALTH_PORT", "8081"), ":"+config.String("GRPC_PORT", "50051"), func(gs *grpc.Server) {
 		authv1.RegisterAuthServiceServer(gs, api)
 	})

@@ -14,6 +14,7 @@ The gateway is at `http://localhost:8080`. Postgres is published on `localhost:5
 Local password-reset and email-verification messages are captured by Mailpit at `http://localhost:8025`.
 
 The signing seed in `docker-compose.yml` is a development key. It is not a production secret.
+Google sign-in is disabled unless `GOOGLE_CLIENT_ID` is configured for the platform-owned Google Identity Services app.
 
 ## First path
 
@@ -41,6 +42,17 @@ curl -s -X POST localhost:8080/v1/email/verification/confirm -H "content-type: a
 ```
 
 To resend a verification link, send `POST /v1/email/verification/request` with the environment API key and `{"email":"student@campus.edu"}`.
+
+## Google sign-in
+
+Configure the platform-owned Google Identity Services OAuth client ID as `GOOGLE_CLIENT_ID` in the auth service environment. In the client, request a one-time nonce with the environment API key, pass that nonce to Google Identity Services, then exchange the returned ID token and nonce:
+
+```bash
+curl -s -X POST localhost:8080/v1/oauth/google/nonce -H "X-Api-Key: <environment-key>"
+curl -s -X POST localhost:8080/v1/oauth/google -H "X-Api-Key: <environment-key>" -H "content-type: application/json" -d "{\"id_token\":\"<google-id-token>\",\"nonce\":\"<nonce-from-first-call>\"}"
+```
+
+Google credentials are validated against the configured client ID and Google's OIDC issuer. Only Google-verified email addresses are accepted. Nonces expire after five minutes and can be exchanged once. Google accounts are linked to an existing application user with the same verified email, or create a new verified user. The browser/client UI is not included yet.
 
 ## Tests
 

@@ -73,6 +73,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/api-keys", s.issueAPIKey)
 	mux.HandleFunc("POST /v1/signup", s.signup)
 	mux.HandleFunc("POST /v1/login", s.login)
+	mux.HandleFunc("POST /v1/oauth/google/nonce", s.googleNonce)
+	mux.HandleFunc("POST /v1/oauth/google", s.googleLogin)
 	mux.HandleFunc("POST /v1/email/verification/request", s.requestEmailVerification)
 	mux.HandleFunc("POST /v1/email/verification/confirm", s.verifyEmail)
 	mux.HandleFunc("POST /v1/token/refresh", s.refresh)
@@ -285,6 +287,50 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	s.passwordAuth(w, r, false)
+}
+
+func (s *Server) googleNonce(w http.ResponseWriter, r *http.Request) {
+	resolved, ok := s.resolveKey(w, r)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.auth.CreateGoogleNonce(ctx, &authv1.CreateGoogleNonceRequest{
+		EnvironmentId: resolved.GetEnvironmentId(),
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"nonce": resp.GetNonce()})
+}
+
+func (s *Server) googleLogin(w http.ResponseWriter, r *http.Request) {
+	resolved, ok := s.resolveKey(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		IDToken string `json:"id_token"`
+		Nonce   string `json:"nonce"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+	resp, err := s.auth.GoogleLogin(ctx, &authv1.GoogleLoginRequest{
+		EnvironmentId: resolved.GetEnvironmentId(),
+		ProjectId:     resolved.GetProjectId(),
+		IdToken:       body.IDToken,
+		Nonce:         body.Nonce,
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	writeTokens(w, http.StatusOK, resp.GetAccessToken(), resp.GetRefreshToken(), resp.GetAccessExpiresAt(), resp.GetUserId(), resp.GetSessionId(), resp.GetEmailVerified())
 }
 
 func (s *Server) requestEmailVerification(w http.ResponseWriter, r *http.Request) {
@@ -548,7 +594,7 @@ func writeStatus(w http.ResponseWriter, err error) {
 
 func publicMessage(msg string) bool {
 	switch msg {
-	case "invalid_argument", "invalid_credentials", "invalid_api_key", "email_already_registered", "slug_taken", "forbidden", "not_found", "account_disabled", "refresh_reuse_detected", "unauthenticated", "invalid_reset_token", "invalid_verification_token", "internal", "already_exists":
+	case "invalid_argument", "invalid_credentials", "invalid_api_key", "email_already_registered", "slug_taken", "forbidden", "not_found", "account_disabled", "refresh_reuse_detected", "unauthenticated", "invalid_reset_token", "invalid_verification_token", "invalid_google_credential", "google_identity_conflict", "google_sign_in_unavailable", "internal", "already_exists":
 		return true
 	default:
 		return false

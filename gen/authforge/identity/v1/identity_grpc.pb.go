@@ -24,6 +24,8 @@ const (
 	IdentityService_GetUser_FullMethodName                  = "/authforge.identity.v1.IdentityService/GetUser"
 	IdentityService_RequestEmailVerification_FullMethodName = "/authforge.identity.v1.IdentityService/RequestEmailVerification"
 	IdentityService_VerifyEmail_FullMethodName              = "/authforge.identity.v1.IdentityService/VerifyEmail"
+	IdentityService_AuthenticateGoogle_FullMethodName       = "/authforge.identity.v1.IdentityService/AuthenticateGoogle"
+	IdentityService_CreateGoogleNonce_FullMethodName        = "/authforge.identity.v1.IdentityService/CreateGoogleNonce"
 )
 
 // IdentityServiceClient is the client API for IdentityService service.
@@ -35,6 +37,8 @@ type IdentityServiceClient interface {
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 	RequestEmailVerification(ctx context.Context, in *RequestEmailVerificationRequest, opts ...grpc.CallOption) (*RequestEmailVerificationResponse, error)
 	VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*VerifyEmailResponse, error)
+	AuthenticateGoogle(ctx context.Context, in *AuthenticateGoogleRequest, opts ...grpc.CallOption) (*AuthenticateGoogleResponse, error)
+	CreateGoogleNonce(ctx context.Context, in *CreateGoogleNonceRequest, opts ...grpc.CallOption) (*CreateGoogleNonceResponse, error)
 }
 
 type identityServiceClient struct {
@@ -95,6 +99,26 @@ func (c *identityServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmail
 	return out, nil
 }
 
+func (c *identityServiceClient) AuthenticateGoogle(ctx context.Context, in *AuthenticateGoogleRequest, opts ...grpc.CallOption) (*AuthenticateGoogleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthenticateGoogleResponse)
+	err := c.cc.Invoke(ctx, IdentityService_AuthenticateGoogle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *identityServiceClient) CreateGoogleNonce(ctx context.Context, in *CreateGoogleNonceRequest, opts ...grpc.CallOption) (*CreateGoogleNonceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateGoogleNonceResponse)
+	err := c.cc.Invoke(ctx, IdentityService_CreateGoogleNonce_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IdentityServiceServer is the server API for IdentityService service.
 // All implementations must embed UnimplementedIdentityServiceServer
 // for forward compatibility.
@@ -104,6 +128,8 @@ type IdentityServiceServer interface {
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
 	RequestEmailVerification(context.Context, *RequestEmailVerificationRequest) (*RequestEmailVerificationResponse, error)
 	VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error)
+	AuthenticateGoogle(context.Context, *AuthenticateGoogleRequest) (*AuthenticateGoogleResponse, error)
+	CreateGoogleNonce(context.Context, *CreateGoogleNonceRequest) (*CreateGoogleNonceResponse, error)
 	mustEmbedUnimplementedIdentityServiceServer()
 }
 
@@ -128,6 +154,12 @@ func (UnimplementedIdentityServiceServer) RequestEmailVerification(context.Conte
 }
 func (UnimplementedIdentityServiceServer) VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyEmail not implemented")
+}
+func (UnimplementedIdentityServiceServer) AuthenticateGoogle(context.Context, *AuthenticateGoogleRequest) (*AuthenticateGoogleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthenticateGoogle not implemented")
+}
+func (UnimplementedIdentityServiceServer) CreateGoogleNonce(context.Context, *CreateGoogleNonceRequest) (*CreateGoogleNonceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGoogleNonce not implemented")
 }
 func (UnimplementedIdentityServiceServer) mustEmbedUnimplementedIdentityServiceServer() {}
 func (UnimplementedIdentityServiceServer) testEmbeddedByValue()                         {}
@@ -240,6 +272,42 @@ func _IdentityService_VerifyEmail_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IdentityService_AuthenticateGoogle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthenticateGoogleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServiceServer).AuthenticateGoogle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityService_AuthenticateGoogle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServiceServer).AuthenticateGoogle(ctx, req.(*AuthenticateGoogleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IdentityService_CreateGoogleNonce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGoogleNonceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServiceServer).CreateGoogleNonce(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityService_CreateGoogleNonce_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServiceServer).CreateGoogleNonce(ctx, req.(*CreateGoogleNonceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IdentityService_ServiceDesc is the grpc.ServiceDesc for IdentityService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -266,6 +334,14 @@ var IdentityService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyEmail",
 			Handler:    _IdentityService_VerifyEmail_Handler,
+		},
+		{
+			MethodName: "AuthenticateGoogle",
+			Handler:    _IdentityService_AuthenticateGoogle_Handler,
+		},
+		{
+			MethodName: "CreateGoogleNonce",
+			Handler:    _IdentityService_CreateGoogleNonce_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -10,6 +10,8 @@ service IdentityService {
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
   rpc RequestEmailVerification(RequestEmailVerificationRequest) returns (RequestEmailVerificationResponse);
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc AuthenticateGoogle(AuthenticateGoogleRequest) returns (AuthenticateGoogleResponse);
+  rpc CreateGoogleNonce(CreateGoogleNonceRequest) returns (CreateGoogleNonceResponse);
 }
 
 message User {
@@ -65,4 +67,24 @@ message VerifyEmailRequest {
 
 message VerifyEmailResponse {
   bool verified = 1;
+}
+
+message AuthenticateGoogleRequest {
+  string environment_id = 1;
+  string project_id = 2;
+  string subject = 3;
+  string email = 4;
+  string nonce = 5;
+}
+
+message AuthenticateGoogleResponse {
+  User user = 1;
+}
+
+message CreateGoogleNonceRequest {
+  string environment_id = 1;
+}
+
+message CreateGoogleNonceResponse {
+  string nonce = 1;
 }

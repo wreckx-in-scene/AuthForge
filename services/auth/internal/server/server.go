@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -15,14 +16,15 @@ import (
 
 type Server struct {
 	authv1.UnimplementedAuthServiceServer
-	identity identityv1.IdentityServiceClient
-	session  sessionv1.SessionServiceClient
-	signer   *token.Signer
-	log      *slog.Logger
+	identity         identityv1.IdentityServiceClient
+	session          sessionv1.SessionServiceClient
+	signer           *token.Signer
+	googleIDVerifier *oidc.IDTokenVerifier
+	log              *slog.Logger
 }
 
-func New(identity identityv1.IdentityServiceClient, session sessionv1.SessionServiceClient, signer *token.Signer, log *slog.Logger) *Server {
-	return &Server{identity: identity, session: session, signer: signer, log: log}
+func New(identity identityv1.IdentityServiceClient, session sessionv1.SessionServiceClient, signer *token.Signer, googleIDVerifier *oidc.IDTokenVerifier, log *slog.Logger) *Server {
+	return &Server{identity: identity, session: session, signer: signer, googleIDVerifier: googleIDVerifier, log: log}
 }
 
 func (s *Server) SignUp(ctx context.Context, req *authv1.SignUpRequest) (*authv1.SignUpResponse, error) {
@@ -133,6 +135,55 @@ func (s *Server) VerifyEmail(ctx context.Context, req *authv1.VerifyEmailRequest
 		return nil, s.pass(err)
 	}
 	return &authv1.VerifyEmailResponse{Verified: verified.GetVerified()}, nil
+}
+
+func (s *Server) CreateGoogleNonce(ctx context.Context, req *authv1.CreateGoogleNonceRequest) (*authv1.CreateGoogleNonceResponse, error) {
+	if s.googleIDVerifier == nil {
+		return nil, status.Error(codes.Unavailable, "google_sign_in_unavailable")
+	}
+	created, err := s.identity.CreateGoogleNonce(ctx, &identityv1.CreateGoogleNonceRequest{
+		EnvironmentId: req.GetEnvironmentId(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	return &authv1.CreateGoogleNonceResponse{Nonce: created.GetNonce()}, nil
+}
+
+func (s *Server) GoogleLogin(ctx context.Context, req *authv1.GoogleLoginRequest) (*authv1.GoogleLoginResponse, error) {
+	if s.googleIDVerifier == nil {
+		return nil, status.Error(codes.Unavailable, "google_sign_in_unavailable")
+	}
+	claims, err := verifyGoogleCredential(ctx, s.googleIDVerifier, req.GetIdToken(), req.GetNonce())
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid_google_credential")
+	}
+	authed, err := s.identity.AuthenticateGoogle(ctx, &identityv1.AuthenticateGoogleRequest{
+		EnvironmentId: req.GetEnvironmentId(),
+		ProjectId:     req.GetProjectId(),
+		Subject:       claims.Subject,
+		Email:         claims.Email,
+		Nonce:         req.GetNonce(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	user := authed.GetUser()
+	if user.GetProjectId() != req.GetProjectId() {
+		return nil, status.Error(codes.PermissionDenied, "forbidden")
+	}
+	issued, err := s.issue(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return &authv1.GoogleLoginResponse{
+		AccessToken:     issued.GetAccessToken(),
+		RefreshToken:    issued.GetRefreshToken(),
+		AccessExpiresAt: issued.GetAccessExpiresAt(),
+		UserId:          issued.GetUserId(),
+		SessionId:       issued.GetSessionId(),
+		EmailVerified:   issued.GetEmailVerified(),
+	}, nil
 }
 
 func (s *Server) VerificationKeys(context.Context, *authv1.VerificationKeysRequest) (*authv1.VerificationKeysResponse, error) {

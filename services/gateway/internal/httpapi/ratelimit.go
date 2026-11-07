@@ -20,6 +20,8 @@ var rateLimitRules = map[string]rateLimitRule{
 	"POST /v1/console/login":              {group: "password-auth", burst: 10, window: time.Minute},
 	"POST /v1/signup":                     {group: "password-auth", burst: 10, window: time.Minute},
 	"POST /v1/login":                      {group: "password-auth", burst: 10, window: time.Minute},
+	"POST /v1/oauth/google/nonce":         {group: "password-auth", burst: 10, window: time.Minute},
+	"POST /v1/oauth/google":               {group: "password-auth", burst: 10, window: time.Minute},
 	"POST /v1/password-reset/request":     {group: "email-actions", burst: 3, window: 15 * time.Minute},
 	"POST /v1/email/verification/request": {group: "email-actions", burst: 3, window: 15 * time.Minute},
 	"POST /v1/password-reset/confirm":     {group: "token-confirm", burst: 5, window: time.Minute},

@@ -601,6 +601,214 @@ func (x *VerifyEmailResponse) GetVerified() bool {
 	return false
 }
 
+type AuthenticateGoogleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EnvironmentId string                 `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Subject       string                 `protobuf:"bytes,3,opt,name=subject,proto3" json:"subject,omitempty"`
+	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
+	Nonce         string                 `protobuf:"bytes,5,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthenticateGoogleRequest) Reset() {
+	*x = AuthenticateGoogleRequest{}
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthenticateGoogleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthenticateGoogleRequest) ProtoMessage() {}
+
+func (x *AuthenticateGoogleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthenticateGoogleRequest.ProtoReflect.Descriptor instead.
+func (*AuthenticateGoogleRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_identity_v1_identity_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *AuthenticateGoogleRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *AuthenticateGoogleRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *AuthenticateGoogleRequest) GetSubject() string {
+	if x != nil {
+		return x.Subject
+	}
+	return ""
+}
+
+func (x *AuthenticateGoogleRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *AuthenticateGoogleRequest) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+type AuthenticateGoogleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthenticateGoogleResponse) Reset() {
+	*x = AuthenticateGoogleResponse{}
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthenticateGoogleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthenticateGoogleResponse) ProtoMessage() {}
+
+func (x *AuthenticateGoogleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthenticateGoogleResponse.ProtoReflect.Descriptor instead.
+func (*AuthenticateGoogleResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_identity_v1_identity_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *AuthenticateGoogleResponse) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+type CreateGoogleNonceRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EnvironmentId string                 `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateGoogleNonceRequest) Reset() {
+	*x = CreateGoogleNonceRequest{}
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateGoogleNonceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateGoogleNonceRequest) ProtoMessage() {}
+
+func (x *CreateGoogleNonceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateGoogleNonceRequest.ProtoReflect.Descriptor instead.
+func (*CreateGoogleNonceRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_identity_v1_identity_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *CreateGoogleNonceRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+type CreateGoogleNonceResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Nonce         string                 `protobuf:"bytes,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateGoogleNonceResponse) Reset() {
+	*x = CreateGoogleNonceResponse{}
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateGoogleNonceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateGoogleNonceResponse) ProtoMessage() {}
+
+func (x *CreateGoogleNonceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_identity_v1_identity_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateGoogleNonceResponse.ProtoReflect.Descriptor instead.
+func (*CreateGoogleNonceResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_identity_v1_identity_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *CreateGoogleNonceResponse) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
 var File_authforge_identity_v1_identity_proto protoreflect.FileDescriptor
 
 const file_authforge_identity_v1_identity_proto_rawDesc = "" +
@@ -641,14 +849,29 @@ const file_authforge_identity_v1_identity_proto_rawDesc = "" +
 	"\x0eenvironment_id\x18\x01 \x01(\tR\renvironmentId\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\"1\n" +
 	"\x13VerifyEmailResponse\x12\x1a\n" +
-	"\bverified\x18\x01 \x01(\bR\bverified2\xab\x04\n" +
+	"\bverified\x18\x01 \x01(\bR\bverified\"\xa7\x01\n" +
+	"\x19AuthenticateGoogleRequest\x12%\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tR\renvironmentId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x18\n" +
+	"\asubject\x18\x03 \x01(\tR\asubject\x12\x14\n" +
+	"\x05email\x18\x04 \x01(\tR\x05email\x12\x14\n" +
+	"\x05nonce\x18\x05 \x01(\tR\x05nonce\"M\n" +
+	"\x1aAuthenticateGoogleResponse\x12/\n" +
+	"\x04user\x18\x01 \x01(\v2\x1b.authforge.identity.v1.UserR\x04user\"A\n" +
+	"\x18CreateGoogleNonceRequest\x12%\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tR\renvironmentId\"1\n" +
+	"\x19CreateGoogleNonceResponse\x12\x14\n" +
+	"\x05nonce\x18\x01 \x01(\tR\x05nonce2\x9e\x06\n" +
 	"\x0fIdentityService\x12a\n" +
 	"\n" +
 	"CreateUser\x12(.authforge.identity.v1.CreateUserRequest\x1a).authforge.identity.v1.CreateUserResponse\x12g\n" +
 	"\fAuthenticate\x12*.authforge.identity.v1.AuthenticateRequest\x1a+.authforge.identity.v1.AuthenticateResponse\x12X\n" +
 	"\aGetUser\x12%.authforge.identity.v1.GetUserRequest\x1a&.authforge.identity.v1.GetUserResponse\x12\x8b\x01\n" +
 	"\x18RequestEmailVerification\x126.authforge.identity.v1.RequestEmailVerificationRequest\x1a7.authforge.identity.v1.RequestEmailVerificationResponse\x12d\n" +
-	"\vVerifyEmail\x12).authforge.identity.v1.VerifyEmailRequest\x1a*.authforge.identity.v1.VerifyEmailResponseBKZIgithub.com/wreckx-in-scene/AuthForge/gen/authforge/identity/v1;identityv1b\x06proto3"
+	"\vVerifyEmail\x12).authforge.identity.v1.VerifyEmailRequest\x1a*.authforge.identity.v1.VerifyEmailResponse\x12y\n" +
+	"\x12AuthenticateGoogle\x120.authforge.identity.v1.AuthenticateGoogleRequest\x1a1.authforge.identity.v1.AuthenticateGoogleResponse\x12v\n" +
+	"\x11CreateGoogleNonce\x12/.authforge.identity.v1.CreateGoogleNonceRequest\x1a0.authforge.identity.v1.CreateGoogleNonceResponseBKZIgithub.com/wreckx-in-scene/AuthForge/gen/authforge/identity/v1;identityv1b\x06proto3"
 
 var (
 	file_authforge_identity_v1_identity_proto_rawDescOnce sync.Once
@@ -662,7 +885,7 @@ func file_authforge_identity_v1_identity_proto_rawDescGZIP() []byte {
 	return file_authforge_identity_v1_identity_proto_rawDescData
 }
 
-var file_authforge_identity_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_authforge_identity_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_authforge_identity_v1_identity_proto_goTypes = []any{
 	(*User)(nil),                             // 0: authforge.identity.v1.User
 	(*CreateUserRequest)(nil),                // 1: authforge.identity.v1.CreateUserRequest
@@ -675,26 +898,35 @@ var file_authforge_identity_v1_identity_proto_goTypes = []any{
 	(*RequestEmailVerificationResponse)(nil), // 8: authforge.identity.v1.RequestEmailVerificationResponse
 	(*VerifyEmailRequest)(nil),               // 9: authforge.identity.v1.VerifyEmailRequest
 	(*VerifyEmailResponse)(nil),              // 10: authforge.identity.v1.VerifyEmailResponse
+	(*AuthenticateGoogleRequest)(nil),        // 11: authforge.identity.v1.AuthenticateGoogleRequest
+	(*AuthenticateGoogleResponse)(nil),       // 12: authforge.identity.v1.AuthenticateGoogleResponse
+	(*CreateGoogleNonceRequest)(nil),         // 13: authforge.identity.v1.CreateGoogleNonceRequest
+	(*CreateGoogleNonceResponse)(nil),        // 14: authforge.identity.v1.CreateGoogleNonceResponse
 }
 var file_authforge_identity_v1_identity_proto_depIdxs = []int32{
 	0,  // 0: authforge.identity.v1.CreateUserResponse.user:type_name -> authforge.identity.v1.User
 	0,  // 1: authforge.identity.v1.AuthenticateResponse.user:type_name -> authforge.identity.v1.User
 	0,  // 2: authforge.identity.v1.GetUserResponse.user:type_name -> authforge.identity.v1.User
-	1,  // 3: authforge.identity.v1.IdentityService.CreateUser:input_type -> authforge.identity.v1.CreateUserRequest
-	3,  // 4: authforge.identity.v1.IdentityService.Authenticate:input_type -> authforge.identity.v1.AuthenticateRequest
-	5,  // 5: authforge.identity.v1.IdentityService.GetUser:input_type -> authforge.identity.v1.GetUserRequest
-	7,  // 6: authforge.identity.v1.IdentityService.RequestEmailVerification:input_type -> authforge.identity.v1.RequestEmailVerificationRequest
-	9,  // 7: authforge.identity.v1.IdentityService.VerifyEmail:input_type -> authforge.identity.v1.VerifyEmailRequest
-	2,  // 8: authforge.identity.v1.IdentityService.CreateUser:output_type -> authforge.identity.v1.CreateUserResponse
-	4,  // 9: authforge.identity.v1.IdentityService.Authenticate:output_type -> authforge.identity.v1.AuthenticateResponse
-	6,  // 10: authforge.identity.v1.IdentityService.GetUser:output_type -> authforge.identity.v1.GetUserResponse
-	8,  // 11: authforge.identity.v1.IdentityService.RequestEmailVerification:output_type -> authforge.identity.v1.RequestEmailVerificationResponse
-	10, // 12: authforge.identity.v1.IdentityService.VerifyEmail:output_type -> authforge.identity.v1.VerifyEmailResponse
-	8,  // [8:13] is the sub-list for method output_type
-	3,  // [3:8] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	0,  // 3: authforge.identity.v1.AuthenticateGoogleResponse.user:type_name -> authforge.identity.v1.User
+	1,  // 4: authforge.identity.v1.IdentityService.CreateUser:input_type -> authforge.identity.v1.CreateUserRequest
+	3,  // 5: authforge.identity.v1.IdentityService.Authenticate:input_type -> authforge.identity.v1.AuthenticateRequest
+	5,  // 6: authforge.identity.v1.IdentityService.GetUser:input_type -> authforge.identity.v1.GetUserRequest
+	7,  // 7: authforge.identity.v1.IdentityService.RequestEmailVerification:input_type -> authforge.identity.v1.RequestEmailVerificationRequest
+	9,  // 8: authforge.identity.v1.IdentityService.VerifyEmail:input_type -> authforge.identity.v1.VerifyEmailRequest
+	11, // 9: authforge.identity.v1.IdentityService.AuthenticateGoogle:input_type -> authforge.identity.v1.AuthenticateGoogleRequest
+	13, // 10: authforge.identity.v1.IdentityService.CreateGoogleNonce:input_type -> authforge.identity.v1.CreateGoogleNonceRequest
+	2,  // 11: authforge.identity.v1.IdentityService.CreateUser:output_type -> authforge.identity.v1.CreateUserResponse
+	4,  // 12: authforge.identity.v1.IdentityService.Authenticate:output_type -> authforge.identity.v1.AuthenticateResponse
+	6,  // 13: authforge.identity.v1.IdentityService.GetUser:output_type -> authforge.identity.v1.GetUserResponse
+	8,  // 14: authforge.identity.v1.IdentityService.RequestEmailVerification:output_type -> authforge.identity.v1.RequestEmailVerificationResponse
+	10, // 15: authforge.identity.v1.IdentityService.VerifyEmail:output_type -> authforge.identity.v1.VerifyEmailResponse
+	12, // 16: authforge.identity.v1.IdentityService.AuthenticateGoogle:output_type -> authforge.identity.v1.AuthenticateGoogleResponse
+	14, // 17: authforge.identity.v1.IdentityService.CreateGoogleNonce:output_type -> authforge.identity.v1.CreateGoogleNonceResponse
+	11, // [11:18] is the sub-list for method output_type
+	4,  // [4:11] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_authforge_identity_v1_identity_proto_init() }
@@ -708,7 +940,7 @@ func file_authforge_identity_v1_identity_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_authforge_identity_v1_identity_proto_rawDesc), len(file_authforge_identity_v1_identity_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

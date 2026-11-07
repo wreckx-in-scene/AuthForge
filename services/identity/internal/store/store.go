@@ -118,6 +118,123 @@ func (s *Store) GetUser(ctx context.Context, environmentID, userID string) (User
 	return user, nil
 }
 
+func (s *Store) CreateGoogleNonce(ctx context.Context, environmentID string) (string, error) {
+	if err := id.Parse(environmentID); err != nil {
+		return "", err
+	}
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+	nonce := "af_gn_" + hex.EncodeToString(raw)
+	err := database.InEnvironment(ctx, s.pool, environmentID, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, `
+			DELETE FROM identity.google_auth_nonces
+			WHERE environment_id = $1 AND (expires_at <= now() OR consumed_at IS NOT NULL)
+		`, environmentID); err != nil {
+			return err
+		}
+		_, err := tx.Exec(ctx, `
+			INSERT INTO identity.google_auth_nonces (id, environment_id, nonce_hash, expires_at)
+			VALUES ($1, $2, $3, $4)
+		`, uuid.NewString(), environmentID, digest.SHA256(nonce), time.Now().UTC().Add(5*time.Minute))
+		return err
+	})
+	if err != nil {
+		return "", err
+	}
+	return nonce, nil
+}
+
+func (s *Store) AuthenticateGoogle(ctx context.Context, environmentID, projectID, subject, email, normalizedEmail, nonce string) (User, error) {
+	if err := id.Parse(environmentID, projectID); err != nil {
+		return User{}, err
+	}
+	if subject == "" || email == "" || nonce == "" {
+		return User{}, errs.ErrInvalid
+	}
+	var user User
+	err := database.InEnvironment(ctx, s.pool, environmentID, func(tx pgx.Tx) error {
+		tag, err := tx.Exec(ctx, `
+			UPDATE identity.google_auth_nonces
+			SET consumed_at = now()
+			WHERE environment_id = $1 AND nonce_hash = $2
+			  AND consumed_at IS NULL AND expires_at > now()
+		`, environmentID, digest.SHA256(nonce))
+		if err != nil {
+			return err
+		}
+		if tag.RowsAffected() == 0 {
+			return errs.ErrUnauthenticated
+		}
+		err = tx.QueryRow(ctx, `
+			SELECT u.id::text, u.environment_id::text, u.project_id::text, u.email, u.email_verified, u.status
+			FROM identity.external_identities x
+			JOIN identity.users u
+			  ON u.environment_id = x.environment_id AND u.id = x.user_id
+			WHERE x.environment_id = $1 AND x.provider = 'google' AND x.provider_subject = $2
+		`, environmentID, subject).Scan(
+			&user.ID, &user.EnvironmentID, &user.ProjectID, &user.Email, &user.EmailVerified, &user.Status,
+		)
+		if err == nil {
+			if user.ProjectID != projectID {
+				return errs.ErrForbidden
+			}
+			return nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
+
+		user = User{ID: uuid.NewString(), EnvironmentID: environmentID, ProjectID: projectID, Email: email}
+		err = tx.QueryRow(ctx, `
+			INSERT INTO identity.users (id, environment_id, project_id, email, normalized_email, email_verified)
+			VALUES ($1, $2, $3, $4, $5, TRUE)
+			ON CONFLICT (environment_id, normalized_email)
+			DO UPDATE SET email_verified = TRUE
+			RETURNING id::text, environment_id::text, project_id::text, email, email_verified, status
+		`, user.ID, environmentID, projectID, email, normalizedEmail).Scan(
+			&user.ID, &user.EnvironmentID, &user.ProjectID, &user.Email, &user.EmailVerified, &user.Status,
+		)
+		if err != nil {
+			return err
+		}
+		if user.ProjectID != projectID {
+			return errs.ErrForbidden
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO identity.external_identities (environment_id, provider, provider_subject, user_id)
+			VALUES ($1, 'google', $2, $3)
+			ON CONFLICT DO NOTHING
+		`, environmentID, subject, user.ID); err != nil {
+			return err
+		}
+		err = tx.QueryRow(ctx, `
+			SELECT u.id::text, u.environment_id::text, u.project_id::text, u.email, u.email_verified, u.status
+			FROM identity.external_identities x
+			JOIN identity.users u
+			  ON u.environment_id = x.environment_id AND u.id = x.user_id
+			WHERE x.environment_id = $1 AND x.provider = 'google' AND x.provider_subject = $2
+		`, environmentID, subject).Scan(
+			&user.ID, &user.EnvironmentID, &user.ProjectID, &user.Email, &user.EmailVerified, &user.Status,
+		)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return errs.ErrConflict
+		}
+		if err != nil {
+			return err
+		}
+		if user.ProjectID != projectID {
+			return errs.ErrForbidden
+		}
+		return nil
+	})
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
 func (s *Store) CreateEmailVerificationToken(ctx context.Context, environmentID, normalizedEmail string) (string, string, error) {
 	raw := make([]byte, 32)
 	if _, err := rand.Read(raw); err != nil {

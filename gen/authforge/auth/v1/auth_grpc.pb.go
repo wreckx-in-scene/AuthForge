@@ -26,6 +26,8 @@ const (
 	AuthService_VerificationKeys_FullMethodName         = "/authforge.auth.v1.AuthService/VerificationKeys"
 	AuthService_RequestEmailVerification_FullMethodName = "/authforge.auth.v1.AuthService/RequestEmailVerification"
 	AuthService_VerifyEmail_FullMethodName              = "/authforge.auth.v1.AuthService/VerifyEmail"
+	AuthService_GoogleLogin_FullMethodName              = "/authforge.auth.v1.AuthService/GoogleLogin"
+	AuthService_CreateGoogleNonce_FullMethodName        = "/authforge.auth.v1.AuthService/CreateGoogleNonce"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -39,6 +41,8 @@ type AuthServiceClient interface {
 	VerificationKeys(ctx context.Context, in *VerificationKeysRequest, opts ...grpc.CallOption) (*VerificationKeysResponse, error)
 	RequestEmailVerification(ctx context.Context, in *RequestEmailVerificationRequest, opts ...grpc.CallOption) (*RequestEmailVerificationResponse, error)
 	VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*VerifyEmailResponse, error)
+	GoogleLogin(ctx context.Context, in *GoogleLoginRequest, opts ...grpc.CallOption) (*GoogleLoginResponse, error)
+	CreateGoogleNonce(ctx context.Context, in *CreateGoogleNonceRequest, opts ...grpc.CallOption) (*CreateGoogleNonceResponse, error)
 }
 
 type authServiceClient struct {
@@ -119,6 +123,26 @@ func (c *authServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmailRequ
 	return out, nil
 }
 
+func (c *authServiceClient) GoogleLogin(ctx context.Context, in *GoogleLoginRequest, opts ...grpc.CallOption) (*GoogleLoginResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GoogleLoginResponse)
+	err := c.cc.Invoke(ctx, AuthService_GoogleLogin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) CreateGoogleNonce(ctx context.Context, in *CreateGoogleNonceRequest, opts ...grpc.CallOption) (*CreateGoogleNonceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateGoogleNonceResponse)
+	err := c.cc.Invoke(ctx, AuthService_CreateGoogleNonce_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -130,6 +154,8 @@ type AuthServiceServer interface {
 	VerificationKeys(context.Context, *VerificationKeysRequest) (*VerificationKeysResponse, error)
 	RequestEmailVerification(context.Context, *RequestEmailVerificationRequest) (*RequestEmailVerificationResponse, error)
 	VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error)
+	GoogleLogin(context.Context, *GoogleLoginRequest) (*GoogleLoginResponse, error)
+	CreateGoogleNonce(context.Context, *CreateGoogleNonceRequest) (*CreateGoogleNonceResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -160,6 +186,12 @@ func (UnimplementedAuthServiceServer) RequestEmailVerification(context.Context, 
 }
 func (UnimplementedAuthServiceServer) VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyEmail not implemented")
+}
+func (UnimplementedAuthServiceServer) GoogleLogin(context.Context, *GoogleLoginRequest) (*GoogleLoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GoogleLogin not implemented")
+}
+func (UnimplementedAuthServiceServer) CreateGoogleNonce(context.Context, *CreateGoogleNonceRequest) (*CreateGoogleNonceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGoogleNonce not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -308,6 +340,42 @@ func _AuthService_VerifyEmail_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_GoogleLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GoogleLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).GoogleLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_GoogleLogin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).GoogleLogin(ctx, req.(*GoogleLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_CreateGoogleNonce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGoogleNonceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).CreateGoogleNonce(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_CreateGoogleNonce_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).CreateGoogleNonce(ctx, req.(*CreateGoogleNonceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -342,6 +410,14 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyEmail",
 			Handler:    _AuthService_VerifyEmail_Handler,
+		},
+		{
+			MethodName: "GoogleLogin",
+			Handler:    _AuthService_GoogleLogin_Handler,
+		},
+		{
+			MethodName: "CreateGoogleNonce",
+			Handler:    _AuthService_CreateGoogleNonce_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

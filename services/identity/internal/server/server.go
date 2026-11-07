@@ -87,6 +87,38 @@ func (s *Server) GetUser(ctx context.Context, req *identityv1.GetUserRequest) (*
 	return &identityv1.GetUserResponse{User: toProto(user)}, nil
 }
 
+func (s *Server) CreateGoogleNonce(ctx context.Context, req *identityv1.CreateGoogleNonceRequest) (*identityv1.CreateGoogleNonceResponse, error) {
+	nonce, err := s.store.CreateGoogleNonce(ctx, req.GetEnvironmentId())
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	return &identityv1.CreateGoogleNonceResponse{Nonce: nonce}, nil
+}
+
+func (s *Server) AuthenticateGoogle(ctx context.Context, req *identityv1.AuthenticateGoogleRequest) (*identityv1.AuthenticateGoogleResponse, error) {
+	if err := id.Parse(req.GetEnvironmentId(), req.GetProjectId()); err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid_google_credential")
+	}
+	display, normalized, err := normalize.Email(req.GetEmail())
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid_google_credential")
+	}
+	user, err := s.store.AuthenticateGoogle(
+		ctx, req.GetEnvironmentId(), req.GetProjectId(), req.GetSubject(),
+		display, normalized, req.GetNonce(),
+	)
+	if errors.Is(err, errs.ErrUnauthenticated) {
+		return nil, status.Error(codes.Unauthenticated, "invalid_google_credential")
+	}
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "google_identity_conflict")
+	}
+	if user.Status != "active" {
+		return nil, status.Error(codes.PermissionDenied, "account_disabled")
+	}
+	return &identityv1.AuthenticateGoogleResponse{User: toProto(user)}, nil
+}
+
 func (s *Server) RequestEmailVerification(ctx context.Context, req *identityv1.RequestEmailVerificationRequest) (*identityv1.RequestEmailVerificationResponse, error) {
 	_, normalized, err := normalize.Email(req.GetEmail())
 	if err != nil || id.Parse(req.GetEnvironmentId()) != nil {

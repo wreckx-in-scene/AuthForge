@@ -110,6 +110,7 @@ services:
       ISSUER: http://localhost:8080
       SIGNING_SEED: LvaMEqu9nHTFqIKItDcbiGFlJPV5Zl+4KXpuOzc92SU=
       ACCESS_TTL: 10m
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       HEALTH_PORT: "8081"
     depends_on:
       identity:
