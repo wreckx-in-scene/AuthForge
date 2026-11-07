@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111a2e">
+    <title>AuthForge Console</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script src="/assets/app.js" defer></script>
+  </head>
+  <body>
+    <div class="auth-layout">
+      <aside class="brand-panel">
+        <a class="brand" href="/" aria-label="AuthForge home">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>auth<span class="brand-light">forge</span></span>
+        </a>
+        <div class="brand-copy">
+          <span class="eyebrow">IDENTITY, WITHOUT THE BOILERPLATE</span>
+          <h1>Build the sign-in experience your product deserves.</h1>
+          <p>One secure foundation for your users, environments, and applications.</p>
+        </div>
+        <div class="brand-bottom">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>Developer preview</span>
+          <span class="brand-bottom-separator">·</span>
+          <span>Self-hosted</span>
+        </div>
+        <div class="brand-orb brand-orb-one" aria-hidden="true"></div>
+        <div class="brand-orb brand-orb-two" aria-hidden="true"></div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <span class="topbar-label">DEVELOPER CONSOLE</span>
+          <div id="account-bar" class="account-bar" hidden>
+            <span id="account-name" class="account-name"></span>
+            <button id="logout-button" class="button button-quiet button-small" type="button">Sign out</button>
+          </div>
+        </header>
+
+        <section id="auth-view" class="auth-view">
+          <div class="auth-heading">
+            <span class="eyebrow eyebrow-dark">GET STARTED</span>
+            <h2 id="auth-title">Create your account</h2>
+            <p id="auth-description">Start building with AuthForge in just a few steps.</p>
+          </div>
+          <div class="card auth-card">
+            <div class="mode-switch" role="tablist" aria-label="Account action">
+              <button id="signup-tab" class="mode-tab is-active" type="button" role="tab" aria-selected="true">Create account</button>
+              <button id="login-tab" class="mode-tab" type="button" role="tab" aria-selected="false">Sign in</button>
+            </div>
+            <form id="account-form" class="form-stack">
+              <label id="name-field" class="field">
+                <span>Your name</span>
+                <input name="name" type="text" autocomplete="name" maxlength="80" placeholder="Ada Lovelace" required>
+              </label>
+              <label class="field">
+                <span>Email address</span>
+                <input name="email" type="email" autocomplete="email" maxlength="320" placeholder="you@company.com" required>
+              </label>
+              <label class="field">
+                <span>Password</span>
+                <input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required>
+                <span class="field-hint">Use at least 8 characters.</span>
+              </label>
+              <button id="account-submit" class="button button-primary button-wide" type="submit">
+                <span>Create account</span><span class="button-arrow" aria-hidden="true">→</span>
+              </button>
+            </form>
+            <p id="auth-notice" class="notice" role="alert" hidden></p>
+          </div>
+          <p class="auth-footnote">By continuing, you agree to keep your credentials private and secure.</p>
+        </section>
+
+        <section id="setup-view" class="setup-view" hidden>
+          <div class="setup-heading">
+            <div>
+              <span class="eyebrow eyebrow-dark">WORKSPACE SETUP</span>
+              <h2 id="setup-title">Let’s set up your workspace.</h2>
+              <p id="setup-description">Create the building blocks your application needs.</p>
+            </div>
+            <span class="step-counter" id="step-counter">STEP 1 OF 4</span>
+          </div>
+          <div class="setup-layout">
+            <nav class="step-nav" aria-label="Workspace setup progress">
+              <div class="step-item is-active" data-nav-step="organization">
+                <span class="step-number">01</span>
+                <span><strong>Organization</strong><small>Your team’s home</small></span>
+                <span class="step-check" aria-hidden="true">✓</span>
+              </div>
+              <div class="step-item" data-nav-step="project">
+                <span class="step-number">02</span>
+                <span><strong>Project</strong><small>Your application</small></span>
+                <span class="step-check" aria-hidden="true">✓</span>
+              </div>
+              <div class="step-item" data-nav-step="environment">
+                <span class="step-number">03</span>
+                <span><strong>Environment</strong><small>Keep credentials isolated</small></span>
+                <span class="step-check" aria-hidden="true">✓</span>
+              </div>
+              <div class="step-item" data-nav-step="key">
+                <span class="step-number">04</span>
+                <span><strong>API key</strong><small>Connect your application</small></span>
+                <span class="step-check" aria-hidden="true">✓</span>
+              </div>
+            </nav>
+
+            <div class="card setup-card">
+              <div id="setup-notice" class="notice" role="alert" hidden></div>
+              <form id="organization-form" class="step-form" data-step="organization">
+                <span class="card-kicker">YOUR TEAM</span>
+                <h3>Create an organization</h3>
+                <p>Organizations keep your projects and teammates together.</p>
+                <label class="field">
+                  <span>Organization name</span>
+                  <input name="name" type="text" maxlength="80" placeholder="Acme Inc." required>
+                </label>
+                <label class="field">
+                  <span>Organization slug <span class="optional">(optional)</span></span>
+                  <input name="slug" type="text" maxlength="63" placeholder="acme-inc">
+                  <span class="field-hint">Used in URLs and must be unique.</span>
+                </label>
+                <button class="button button-primary button-wide" type="submit">Create organization <span class="button-arrow" aria-hidden="true">→</span></button>
+              </form>
+
+              <form id="project-form" class="step-form" data-step="project" hidden>
+                <span class="card-kicker">YOUR APPLICATION</span>
+                <h3>Create a project</h3>
+                <p>A project represents an application that uses AuthForge.</p>
+                <label class="field">
+                  <span>Project name</span>
+                  <input name="name" type="text" maxlength="80" placeholder="Campus Connect" required>
+                </label>
+                <label class="field">
+                  <span>Project slug <span class="optional">(optional)</span></span>
+                  <input name="slug" type="text" maxlength="63" placeholder="campus-connect">
+                </label>
+                <button class="button button-primary button-wide" type="submit">Create project <span class="button-arrow" aria-hidden="true">→</span></button>
+              </form>
+
+              <form id="environment-form" class="step-form" data-step="environment" hidden>
+                <span class="card-kicker">ISOLATED CREDENTIALS</span>
+                <h3>Add an environment</h3>
+                <p>Use separate environments to keep test and production users apart.</p>
+                <label class="field">
+                  <span>Environment</span>
+                  <select name="name" required>
+                    <option value="development">Development</option>
+                    <option value="staging">Staging</option>
+                    <option value="production">Production</option>
+                  </select>
+                  <span class="field-hint">Production keys are live. Start with development.</span>
+                </label>
+                <button class="button button-primary button-wide" type="submit">Create environment <span class="button-arrow" aria-hidden="true">→</span></button>
+              </form>
+
+              <form id="key-form" class="step-form" data-step="key" hidden>
+                <span class="card-kicker">ALMOST THERE</span>
+                <h3>Issue a publishable key</h3>
+                <p>This key connects your application to the environment you just created.</p>
+                <div class="key-info">
+                  <span class="key-info-icon" aria-hidden="true">✳</span>
+                  <span><strong>Safe for client-side use</strong><small>Publishable keys are designed to be included in your app. Never expose a secret key in browser code.</small></span>
+                </div>
+                <button class="button button-primary button-wide" type="submit">Create publishable key <span class="button-arrow" aria-hidden="true">→</span></button>
+              </form>
+
+              <section id="complete-panel" class="complete-panel" hidden>
+                <span class="complete-mark" aria-hidden="true">✓</span>
+                <span class="card-kicker">YOU’RE CONNECTED</span>
+                <h3>Your project is ready.</h3>
+                <p>Copy your publishable key now. AuthForge won’t show it again after you leave this page.</p>
+                <div class="key-display">
+                  <code id="issued-key"></code>
+                  <button id="copy-key" class="button button-secondary button-small" type="button">Copy</button>
+                </div>
+                <div class="project-summary">
+                  <span>PROJECT<strong id="summary-project"></strong></span>
+                  <span>ENVIRONMENT<strong id="summary-environment"></strong></span>
+                </div>
+                <div id="copy-notice" class="copy-notice" role="status" hidden></div>
+                <button id="new-workspace" class="text-button" type="button">Create another workspace</button>
+              </section>
+            </div>
+          </div>
+        </section>
+        <footer class="main-footer"><span>AuthForge Console</span><span>Secure identity infrastructure</span></footer>
+      </main>
+    </div>
+  </body>
+</html>

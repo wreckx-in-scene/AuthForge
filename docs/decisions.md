@@ -115,7 +115,7 @@ Migrations are not run automatically by every replica. Two containers applying t
 - Kafka and a transactional outbox. Nothing asynchronous has to be delivered yet.
 - A denylist of access-token ids. Short expiry is the revocation story for access tokens.
 - mTLS, Redis rate limits, and a JWKS HTTP document. The gateway already treats the auth service as the source of the verification key, which is the same relationship a JWKS URL will have.
-- Hosted login and dashboard. The curl flow against the gateway is the contract those clients will wrap.
+- Hosted login. The curl flow against the gateway is the contract those clients will wrap.
 
 ## 12. Google sign-in uses a verified ID-token exchange
 
@@ -132,3 +132,11 @@ Decision. The first SDK is a framework-agnostic TypeScript client for applicatio
 Alternative. Include a framework-specific UI, console management APIs, or automatic browser storage in the first package.
 
 Tradeoff. Applications can adopt the client in browser or server code without accepting a framework or storage policy. Console management remains a separate future SDK surface.
+
+## 14. The first developer console is served by the gateway
+
+Decision. The gateway serves a same-origin, dependency-free console for account signup/login and the initial organization, project, environment, and publishable-key setup flow. Its static assets are embedded in the gateway binary.
+
+Alternative. Add a separately deployed frontend and cross-origin API configuration before the console workflows are established.
+
+Tradeoff. The first console ships with the existing Compose stack and avoids CORS configuration. It is intentionally limited to setup; it does not yet list or manage existing organizations, projects, environments, or keys.

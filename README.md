@@ -12,6 +12,7 @@ docker compose up --build
 
 The gateway is at `http://localhost:8080`. Postgres is published on `localhost:5432` for local inspection. The gRPC services are only on the Compose network.
 Local password-reset and email-verification messages are captured by Mailpit at `http://localhost:8025`.
+Open `http://localhost:8080` for the developer console to create an account, organization, project, environment, and publishable API key.
 
 The signing seed in `docker-compose.yml` is a development key. It is not a production secret.
 Google sign-in is disabled unless `GOOGLE_CLIENT_ID` is configured for the platform-owned Google Identity Services app.

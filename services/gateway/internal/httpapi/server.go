@@ -15,6 +15,7 @@ import (
 	authv1 "github.com/wreckx-in-scene/AuthForge/gen/authforge/auth/v1"
 	tenantv1 "github.com/wreckx-in-scene/AuthForge/gen/authforge/tenant/v1"
 	"github.com/wreckx-in-scene/AuthForge/internal/token"
+	"github.com/wreckx-in-scene/AuthForge/services/gateway/internal/dashboard"
 )
 
 type Server struct {
@@ -63,6 +64,8 @@ func (s *Server) Handler() http.Handler {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
 	})
+	mux.Handle("GET /{$}", dashboard.Handler())
+	mux.Handle("GET /assets/", dashboard.Handler())
 	mux.HandleFunc("POST /v1/console/signup", s.consoleSignup)
 	mux.HandleFunc("POST /v1/console/login", s.consoleLogin)
 	mux.HandleFunc("POST /v1/password-reset/request", s.requestPasswordReset)

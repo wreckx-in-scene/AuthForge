@@ -44,6 +44,8 @@ An expired, unknown, or previously used token returns `401` with `invalid_reset_
 
 Both return `access_token`, `expires_at`, and `account`.
 
+The gateway also serves a first-party developer console at `/`. It uses these console endpoints to create an account and initial workspace. The console token is kept in tab-scoped session storage and is cleared by Sign out; signing out in the current API does not revoke the stateless token, which remains valid until its expiry. The console issues a publishable key only and displays the returned key once.
+
 `POST /v1/organizations`
 
 ```json
