@@ -100,39 +100,49 @@ func (s *Store) FindAccount(ctx context.Context, normalized string) (Account, st
 	return account, hash, nil
 }
 
-func (s *Store) RequestPasswordReset(ctx context.Context, normalized string) (string, time.Time, error) {
-	var account Account
-	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, email, name
+func (s *Store) RequestPasswordReset(ctx context.Context, normalized string) (string, string, time.Time, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return "", "", time.Time{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var email, accountID string
+	err = tx.QueryRow(ctx, `
+		SELECT id::text, email
 		FROM tenant.accounts
 		WHERE normalized_email = $1
-	`, normalized).Scan(&account.ID, &account.Email, &account.Name)
+		FOR UPDATE
+	`, normalized).Scan(&accountID, &email)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return "", time.Time{}, errs.ErrNotFound
+		return "", "", time.Time{}, errs.ErrNotFound
 	}
 	if err != nil {
-		return "", time.Time{}, err
+		return "", "", time.Time{}, err
 	}
 	resetToken, err := newPasswordResetToken()
 	if err != nil {
-		return "", time.Time{}, err
+		return "", "", time.Time{}, err
 	}
 	expiresAt := time.Now().UTC().Add(30 * time.Minute)
-	_, err = s.pool.Exec(ctx, `
+	_, err = tx.Exec(ctx, `
 		DELETE FROM tenant.password_reset_tokens
 		WHERE account_id = $1
-	`, account.ID)
+	`, accountID)
 	if err != nil {
-		return "", time.Time{}, err
+		return "", "", time.Time{}, err
 	}
-	_, err = s.pool.Exec(ctx, `
+	_, err = tx.Exec(ctx, `
 		INSERT INTO tenant.password_reset_tokens (id, account_id, token_hash, expires_at)
 		VALUES ($1, $2, $3, $4)
-	`, uuid.NewString(), account.ID, digest.SHA256(resetToken), expiresAt)
+	`, uuid.NewString(), accountID, digest.SHA256(resetToken), expiresAt)
 	if err != nil {
-		return "", time.Time{}, err
+		return "", "", time.Time{}, err
 	}
-	return resetToken, expiresAt, nil
+	if err := tx.Commit(ctx); err != nil {
+		return "", "", time.Time{}, err
+	}
+	return email, resetToken, expiresAt, nil
 }
 
 func (s *Store) ResetPassword(ctx context.Context, resetToken, newPasswordHash string) (string, error) {
@@ -159,13 +169,6 @@ func (s *Store) ResetPassword(ctx context.Context, resetToken, newPasswordHash s
 	}
 	now := time.Now().UTC()
 	if usedAt != nil || !now.Before(expiresAt) {
-		if _, updateErr := tx.Exec(ctx, `
-			UPDATE tenant.password_reset_tokens
-			SET used_at = COALESCE(used_at, now())
-			WHERE token_hash = $1
-		`, digest.SHA256(resetToken)); updateErr != nil {
-			return "", updateErr
-		}
 		return "", errs.ErrUnauthenticated
 	}
 	_, err = tx.Exec(ctx, `

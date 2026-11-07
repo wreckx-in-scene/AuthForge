@@ -129,17 +129,12 @@ func (s *Server) requestPasswordReset(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	resp, err := s.tenant.RequestPasswordReset(ctx, &tenantv1.RequestPasswordResetRequest{Email: body.Email})
+	_, err := s.tenant.RequestPasswordReset(ctx, &tenantv1.RequestPasswordResetRequest{Email: body.Email})
 	if err != nil {
 		writeStatus(w, err)
 		return
 	}
-	payload := map[string]any{"status": "ok"}
-	if resp.GetResetToken() != "" {
-		payload["reset_token"] = resp.GetResetToken()
-		payload["expires_at"] = resp.GetExpiresAt()
-	}
-	writeJSON(w, http.StatusOK, payload)
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (s *Server) confirmPasswordReset(w http.ResponseWriter, r *http.Request) {

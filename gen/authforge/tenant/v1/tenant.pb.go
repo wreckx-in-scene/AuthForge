@@ -359,8 +359,6 @@ func (x *RequestPasswordResetRequest) GetEmail() string {
 
 type RequestPasswordResetResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ResetToken    string                 `protobuf:"bytes,1,opt,name=reset_token,json=resetToken,proto3" json:"reset_token,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -393,20 +391,6 @@ func (x *RequestPasswordResetResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use RequestPasswordResetResponse.ProtoReflect.Descriptor instead.
 func (*RequestPasswordResetResponse) Descriptor() ([]byte, []int) {
 	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *RequestPasswordResetResponse) GetResetToken() string {
-	if x != nil {
-		return x.ResetToken
-	}
-	return ""
-}
-
-func (x *RequestPasswordResetResponse) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return 0
 }
 
 type ResetPasswordRequest struct {
@@ -1180,12 +1164,8 @@ const file_authforge_tenant_v1_tenant_proto_rawDesc = "" +
 	"expires_at\x18\x02 \x01(\x03R\texpiresAt\x126\n" +
 	"\aaccount\x18\x03 \x01(\v2\x1c.authforge.tenant.v1.AccountR\aaccount\"3\n" +
 	"\x1bRequestPasswordResetRequest\x12\x14\n" +
-	"\x05email\x18\x01 \x01(\tR\x05email\"^\n" +
-	"\x1cRequestPasswordResetResponse\x12\x1f\n" +
-	"\vreset_token\x18\x01 \x01(\tR\n" +
-	"resetToken\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"S\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\"*\n" +
+	"\x1cRequestPasswordResetResponseJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03\"S\n" +
 	"\x14ResetPasswordRequest\x12\x1f\n" +
 	"\vreset_token\x18\x01 \x01(\tR\n" +
 	"resetToken\x12\x1a\n" +

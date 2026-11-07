@@ -14,6 +14,7 @@ import (
 	"github.com/wreckx-in-scene/AuthForge/internal/apikey"
 	"github.com/wreckx-in-scene/AuthForge/internal/digest"
 	"github.com/wreckx-in-scene/AuthForge/internal/errs"
+	"github.com/wreckx-in-scene/AuthForge/internal/mailer"
 	"github.com/wreckx-in-scene/AuthForge/internal/normalize"
 	"github.com/wreckx-in-scene/AuthForge/internal/password"
 	"github.com/wreckx-in-scene/AuthForge/internal/statusx"
@@ -23,15 +24,20 @@ import (
 
 type Server struct {
 	tenantv1.UnimplementedTenantServiceServer
-	store      *store.Store
-	secret     []byte
-	issuer     string
-	consoleTTL time.Duration
-	log        *slog.Logger
+	store       *store.Store
+	secret      []byte
+	issuer      string
+	consoleTTL  time.Duration
+	resetURL    string
+	resetSender mailer.PasswordResetSender
+	log         *slog.Logger
 }
 
-func New(st *store.Store, secret []byte, issuer string, consoleTTL time.Duration, log *slog.Logger) *Server {
-	return &Server{store: st, secret: secret, issuer: issuer, consoleTTL: consoleTTL, log: log}
+func New(st *store.Store, secret []byte, issuer string, consoleTTL time.Duration, resetURL string, resetMailer mailer.PasswordResetSender, log *slog.Logger) *Server {
+	return &Server{
+		store: st, secret: secret, issuer: issuer, consoleTTL: consoleTTL,
+		resetURL: resetURL, resetSender: resetMailer, log: log,
+	}
 }
 
 func (s *Server) CreateAccount(ctx context.Context, req *tenantv1.CreateAccountRequest) (*tenantv1.CreateAccountResponse, error) {
@@ -95,14 +101,21 @@ func (s *Server) RequestPasswordReset(ctx context.Context, req *tenantv1.Request
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid_argument")
 	}
-	resetToken, expiresAt, err := s.store.RequestPasswordReset(ctx, normalized)
+	email, resetToken, _, err := s.store.RequestPasswordReset(ctx, normalized)
 	if errors.Is(err, errs.ErrNotFound) {
 		return &tenantv1.RequestPasswordResetResponse{}, nil
 	}
 	if err != nil {
 		return nil, statusx.Fail(s.log, err, "")
 	}
-	return &tenantv1.RequestPasswordResetResponse{ResetToken: resetToken, ExpiresAt: expiresAt.Unix()}, nil
+	resetLink, err := mailer.PasswordResetURL(s.resetURL, resetToken)
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	if err := s.resetSender.SendPasswordReset(ctx, email, resetLink); err != nil {
+		s.log.Error("password reset email delivery failed", "err", err)
+	}
+	return &tenantv1.RequestPasswordResetResponse{}, nil
 }
 
 func (s *Server) ResetPassword(ctx context.Context, req *tenantv1.ResetPasswordRequest) (*tenantv1.ResetPasswordResponse, error) {

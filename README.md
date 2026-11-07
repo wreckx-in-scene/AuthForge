@@ -11,6 +11,7 @@ docker compose up --build
 ```
 
 The gateway is at `http://localhost:8080`. Postgres is published on `localhost:5432` for local inspection. The gRPC services are only on the Compose network.
+Local reset emails are captured by Mailpit at `http://localhost:8025`.
 
 The signing seed in `docker-compose.yml` is a development key. It is not a production secret.
 
@@ -24,11 +25,11 @@ Use the returned console token as `Authorization: Bearer ...` for `/v1/organizat
 
 ## Password reset
 
-Console accounts can request a password reset token through the gateway. The token is short-lived and invalid after use or expiry.
+Console accounts can request a password reset email through the gateway. The request response is generic and never includes the token. In the local Compose stack, open Mailpit at `http://localhost:8025` to retrieve the message. The link base is configured with `RESET_PASSWORD_URL`; in production, point it at the console UI over HTTPS. This repo does not include that UI yet—the page should read the link's `token` query parameter and submit it to the confirm endpoint.
 
 ```bash
-curl -s -X POST localhost:8080/v1/password-reset/request -H 'content-type: application/json' -d '{"email":"ada@campus.edu"}'
-curl -s -X POST localhost:8080/v1/password-reset/confirm -H 'content-type: application/json' -d '{"reset_token":"af_pr_...","password":"new-password-123"}'
+curl -s -X POST localhost:8080/v1/password-reset/request -H "content-type: application/json" -d "{\"email\":\"ada@campus.edu\"}"
+curl -s -X POST localhost:8080/v1/password-reset/confirm -H "content-type: application/json" -d "{\"reset_token\":\"af_pr_...\",\"password\":\"new-password-123\"}"
 ```
 
 ## Tests

@@ -19,6 +19,13 @@ services:
       timeout: 5s
       retries: 20
 
+  mailpit:
+    image: axllent/mailpit:v1.27.8
+    container_name: authforge-mailpit
+    ports:
+      - "8025:8025"
+    restart: unless-stopped
+
   migrate:
     build:
       context: .
@@ -42,10 +49,16 @@ services:
       DATABASE_URL: postgres://authforge_app:authforge_app@postgres:5432/authforge?sslmode=disable
       ISSUER: http://localhost:8080
       CONSOLE_TOKEN_SECRET: cJUsq8impGopS5G7YUBsND9eHzS60vVhBckxnG3CuNc=
+      SMTP_ADDR: mailpit:1025
+      SMTP_FROM: AuthForge <no-reply@authforge.local>
+      SMTP_STARTTLS: "false"
+      RESET_PASSWORD_URL: http://localhost:3000/reset-password
       HEALTH_PORT: "8081"
     depends_on:
       migrate:
         condition: service_completed_successfully
+      mailpit:
+        condition: service_started
     restart: unless-stopped
     healthcheck: &probe
       test: ["CMD", "/app", "health"]

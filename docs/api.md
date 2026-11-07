@@ -4,6 +4,24 @@ The gateway listens on port 8080. Console routes take `Authorization: Bearer <co
 
 Tokens are returned once. API keys and refresh tokens are not recoverable later.
 
+## Password reset
+
+`POST /v1/password-reset/request`
+
+```json
+{ "email": "ada@campus.edu" }
+```
+
+Returns `{"status":"ok"}` whether or not the account exists. If it exists, AuthForge emails a single-use link that expires after 30 minutes. The request response never contains the reset token.
+
+`POST /v1/password-reset/confirm`
+
+```json
+{ "reset_token": "af_pr_...", "password": "new-password-123" }
+```
+
+An expired, unknown, or previously used token returns `401` with `invalid_reset_token`. Password reset does not automatically log the account in.
+
 ## Console
 
 `POST /v1/console/signup`
