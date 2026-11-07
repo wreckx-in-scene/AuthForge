@@ -17,7 +17,7 @@ A developer can:
 5. Call a protected route with the access token.
 6. Rotate the refresh token, or revoke the session.
 
-Google Identity Services sign-in is available with a platform-owned client ID. Authorization-code redirect flows, Kafka, the dashboard, hosted login, and the SDKs are later milestones. Application-user email verification and console password recovery use separate single-use SMTP links.
+Google Identity Services sign-in is available with a platform-owned client ID, and a TypeScript SDK wraps the application-user API. Authorization-code redirect flows, Kafka, the dashboard, and hosted login are later milestones. Application-user email verification and console password recovery use separate single-use SMTP links.
 
 ## Runtime
 

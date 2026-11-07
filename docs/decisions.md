@@ -115,7 +115,7 @@ Migrations are not run automatically by every replica. Two containers applying t
 - Kafka and a transactional outbox. Nothing asynchronous has to be delivered yet.
 - A denylist of access-token ids. Short expiry is the revocation story for access tokens.
 - mTLS, Redis rate limits, and a JWKS HTTP document. The gateway already treats the auth service as the source of the verification key, which is the same relationship a JWKS URL will have.
-- Hosted login, dashboard, and SDKs. The curl flow against the gateway is the contract those clients will wrap.
+- Hosted login and dashboard. The curl flow against the gateway is the contract those clients will wrap.
 
 ## 12. Google sign-in uses a verified ID-token exchange
 
@@ -124,3 +124,11 @@ Decision. The MVP uses the platform-owned Google Identity Services client. The c
 Alternative. A server-side authorization-code redirect flow with per-project client credentials. That requires redirect URI management, PKCE/state handling, credential storage, and project configuration that the current console does not have.
 
 Tradeoff. The current endpoint supports clients that can use Google Identity Services, not a hosted redirect flow. A Google subject is linked to an existing user only when the verified email matches; the provider subject, not email, is the stable login identifier after linking. One-time nonces prevent replay of a previously exchanged ID token.
+
+## 13. The TypeScript SDK wraps the application API
+
+Decision. The first SDK is a framework-agnostic TypeScript client for application-user signup/login, Google sign-in, email verification, refresh, logout, and current-user lookup. It uses the standard Fetch API and leaves token persistence to the application.
+
+Alternative. Include a framework-specific UI, console management APIs, or automatic browser storage in the first package.
+
+Tradeoff. Applications can adopt the client in browser or server code without accepting a framework or storage policy. Console management remains a separate future SDK surface.

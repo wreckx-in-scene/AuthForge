@@ -130,6 +130,10 @@ Send the refresh token, or send an access token in `Authorization` and an empty 
 
 `GET /v1/me` checks the access-token signature, issuer, and expiry. It does not read the session row.
 
+## TypeScript SDK
+
+The framework-agnostic client in [`sdk/typescript`](../sdk/typescript) wraps the application-user API: password signup/login, Google ID-token exchange, email verification, refresh, logout, and `GET /v1/me`. It does not include console account or project-management routes and does not persist tokens. Use only a publishable environment key in browser code. See the [SDK guide](../sdk/typescript/README.md) for examples.
+
 ## Errors
 
 Failures use `{ "error": "<code>" }`.

@@ -16,6 +16,10 @@ Local password-reset and email-verification messages are captured by Mailpit at 
 The signing seed in `docker-compose.yml` is a development key. It is not a production secret.
 Google sign-in is disabled unless `GOOGLE_CLIENT_ID` is configured for the platform-owned Google Identity Services app.
 
+## TypeScript SDK
+
+The application-user API has a framework-agnostic TypeScript client in [`sdk/typescript`](./sdk/typescript). See its [usage guide](./sdk/typescript/README.md) for install, signup/login, Google sign-in, email verification, and token management. Use a publishable environment key in browser code; never bundle a secret key.
+
 ## First path
 
 ```bash
