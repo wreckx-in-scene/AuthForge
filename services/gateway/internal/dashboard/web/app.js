@@ -1,5 +1,6 @@
 const authView = document.querySelector("#auth-view");
 const setupView = document.querySelector("#setup-view");
+const workspaceView = document.querySelector("#workspace-view");
 const authForm = document.querySelector("#account-form");
 const authNotice = document.querySelector("#auth-notice");
 const setupNotice = document.querySelector("#setup-notice");
@@ -14,6 +15,12 @@ const state = {
   environment: null,
   key: "",
   step: "organization",
+  selectedOrganizationID: "",
+  selectedProjectID: "",
+  selectedEnvironmentID: "",
+  workspaceOrganizations: [],
+  workspaceProjects: [],
+  workspaceEnvironments: [],
 };
 
 const errorMessages = {
@@ -96,6 +103,9 @@ function saveSession() {
       project: state.project,
       environment: state.environment,
       step: state.step,
+      selectedOrganizationID: state.selectedOrganizationID,
+      selectedProjectID: state.selectedProjectID,
+      selectedEnvironmentID: state.selectedEnvironmentID,
     }));
   } catch {
     const target = state.account ? setupNotice : authNotice;
@@ -113,8 +123,8 @@ function restoreSession() {
       typeof saved.expiresAt !== "number" ||
       saved.expiresAt <= Date.now() ||
       typeof saved.account?.email !== "string" ||
-      !["organization", "project", "environment", "key", "complete"].includes(saved.step) ||
-      (saved.step !== "organization" && typeof saved.organization?.id !== "string") ||
+      !["organization", "project", "environment", "key", "complete", "workspace"].includes(saved.step) ||
+      (!["organization", "workspace"].includes(saved.step) && typeof saved.organization?.id !== "string") ||
       (["environment", "key", "complete"].includes(saved.step) && typeof saved.project?.id !== "string") ||
       (["key", "complete"].includes(saved.step) && typeof saved.environment?.id !== "string")
     ) {
@@ -128,6 +138,9 @@ function restoreSession() {
     state.project = saved.project ?? null;
     state.environment = saved.environment ?? null;
     state.step = saved.step;
+    state.selectedOrganizationID = saved.selectedOrganizationID ?? "";
+    state.selectedProjectID = saved.selectedProjectID ?? "";
+    state.selectedEnvironmentID = saved.selectedEnvironmentID ?? "";
   } catch {
     sessionStorage.removeItem("authforge-console");
   }
@@ -157,6 +170,7 @@ function renderStep() {
   const complete = state.step === "complete";
   authView.hidden = true;
   setupView.hidden = false;
+  workspaceView.hidden = true;
   accountBar.hidden = false;
   accountName.textContent = state.account?.name || state.account?.email || "";
   document.querySelectorAll(".step-form").forEach((form) => {
@@ -184,6 +198,283 @@ function renderStep() {
     document.querySelector("#summary-project").textContent = state.project?.name ?? "";
     document.querySelector("#summary-environment").textContent = state.environment?.name ?? "";
   }
+}
+
+function addEmptyMessage(container, message) {
+  const empty = document.createElement("p");
+  empty.className = "resource-empty";
+  empty.textContent = message;
+  container.replaceChildren(empty);
+}
+
+function renderResourceOptions(container, items, selectedID, getLabel, onSelect) {
+  container.replaceChildren();
+  if (items.length === 0) {
+    addEmptyMessage(container, "Nothing here yet.");
+    return;
+  }
+  for (const item of items) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.id = item.id;
+    button.className = `resource-option${item.id === selectedID ? " is-selected" : ""}`;
+    const label = document.createElement("span");
+    const title = document.createElement("strong");
+    const detail = document.createElement("small");
+    title.textContent = item.name;
+    detail.textContent = getLabel(item);
+    label.append(title, detail);
+    const arrow = document.createElement("span");
+    arrow.className = "resource-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "›";
+    button.append(label, arrow);
+    button.addEventListener("click", () => onSelect(item.id));
+    container.append(button);
+  }
+}
+
+function markSelected(container, selectedID) {
+  container.querySelectorAll(".resource-option").forEach((item) => {
+    item.classList.toggle("is-selected", item.dataset.id === selectedID);
+  });
+}
+
+function renderKeyRows(keys) {
+  const container = document.querySelector("#key-list");
+  container.replaceChildren();
+  if (keys.length === 0) {
+    addEmptyMessage(container, "No API keys yet. Issue a publishable key to connect your app.");
+    return;
+  }
+  for (const key of keys) {
+    const row = document.createElement("div");
+    row.className = "key-row";
+    const main = document.createElement("span");
+    main.className = "key-row-main";
+    const prefix = document.createElement("code");
+    prefix.textContent = key.prefix;
+    const details = document.createElement("small");
+    details.textContent = `${key.key_class} · created ${new Date(key.created_at * 1000).toLocaleDateString()}`;
+    main.append(prefix, details);
+    const status = document.createElement("span");
+    status.className = `key-status${key.status === "revoked" ? " revoked" : ""}`;
+    status.textContent = key.status;
+    row.append(main, status);
+    if (key.status === "active") {
+      const revoke = document.createElement("button");
+      revoke.type = "button";
+      revoke.className = "text-button";
+      revoke.textContent = "Revoke";
+      revoke.addEventListener("click", () => revokeAPIKey(key.id, key.prefix));
+      row.append(revoke);
+    } else {
+      row.append(document.createElement("span"));
+    }
+    container.append(row);
+  }
+}
+
+function showWorkspaceView() {
+  authView.hidden = true;
+  setupView.hidden = true;
+  workspaceView.hidden = false;
+  accountBar.hidden = false;
+  accountName.textContent = state.account?.name || state.account?.email || "";
+}
+
+async function openWorkspace() {
+  state.step = "workspace";
+  state.key = "";
+  state.organization = null;
+  state.project = null;
+  state.environment = null;
+  saveSession();
+  clearNotice(document.querySelector("#workspace-notice"));
+  showWorkspaceView();
+  await loadOrganizations();
+}
+
+async function loadOrganizations() {
+  const notice = document.querySelector("#workspace-notice");
+  clearNotice(notice);
+  try {
+    const response = await api("/v1/organizations", { method: "GET", authenticated: true });
+    const organizations = Array.isArray(response.organizations) ? response.organizations : [];
+    if (!organizations.every((item) => typeof item.id === "string" && typeof item.name === "string" && typeof item.slug === "string")) {
+      throw new Error("AuthForge returned an unexpected organization list.");
+    }
+    state.workspaceOrganizations = organizations;
+    const selected = organizations.find((item) => item.id === state.selectedOrganizationID);
+    const organizationID = selected?.id ?? organizations[0]?.id ?? "";
+    renderResourceOptions(
+      document.querySelector("#organization-list"),
+      organizations,
+      organizationID,
+      (item) => item.slug,
+      selectOrganization,
+    );
+    if (organizationID) {
+      await selectOrganization(organizationID);
+    } else {
+      state.selectedOrganizationID = "";
+      state.selectedProjectID = "";
+      state.selectedEnvironmentID = "";
+      state.organization = null;
+      state.project = null;
+      state.environment = null;
+      state.workspaceProjects = [];
+      state.workspaceEnvironments = [];
+      renderResourceOptions(document.querySelector("#project-list"), [], "", () => "", () => {});
+      addEmptyMessage(document.querySelector("#project-list"), "Create an organization to get started.");
+      addEmptyMessage(document.querySelector("#environment-list"), "Choose a project.");
+      addEmptyMessage(document.querySelector("#key-list"), "Choose an environment.");
+      document.querySelector("#add-project").disabled = true;
+      document.querySelector("#add-environment").disabled = true;
+      document.querySelector("#issue-key").disabled = true;
+    }
+  } catch (error) {
+    handleError(notice, error);
+  }
+}
+
+async function selectOrganization(organizationID) {
+  const notice = document.querySelector("#workspace-notice");
+  const previousProjectID = state.selectedProjectID;
+  state.organization = state.workspaceOrganizations.find((item) => item.id === organizationID) ?? null;
+  state.selectedOrganizationID = organizationID;
+  state.selectedProjectID = "";
+  state.selectedEnvironmentID = "";
+  state.project = null;
+  state.environment = null;
+  state.workspaceProjects = [];
+  state.workspaceEnvironments = [];
+  markSelected(document.querySelector("#organization-list"), organizationID);
+  saveSession();
+  document.querySelector("#add-project").disabled = false;
+  document.querySelector("#add-environment").disabled = true;
+  document.querySelector("#issue-key").disabled = true;
+  document.querySelector("#new-key-notice").hidden = true;
+  try {
+    const response = await api(`/v1/organizations/${encodeURIComponent(organizationID)}/projects`, {
+      method: "GET",
+      authenticated: true,
+    });
+    const projects = Array.isArray(response.projects) ? response.projects : [];
+    if (!projects.every((item) => typeof item.id === "string" && typeof item.name === "string")) {
+      throw new Error("AuthForge returned an unexpected project list.");
+    }
+    state.workspaceProjects = projects;
+    const selected = projects.find((item) => item.id === previousProjectID);
+    const projectID = selected?.id ?? projects[0]?.id ?? "";
+    renderResourceOptions(
+      document.querySelector("#project-list"),
+      projects,
+      projectID,
+      (item) => item.slug,
+      selectProject,
+    );
+    if (projectID) await selectProject(projectID);
+    else {
+      state.project = null;
+      state.environment = null;
+      state.workspaceEnvironments = [];
+      addEmptyMessage(document.querySelector("#environment-list"), "Choose a project.");
+      addEmptyMessage(document.querySelector("#key-list"), "Choose an environment.");
+    }
+  } catch (error) {
+    handleError(notice, error);
+  }
+}
+
+async function selectProject(projectID) {
+  const notice = document.querySelector("#workspace-notice");
+  const previousEnvironmentID = state.selectedEnvironmentID;
+  state.project = state.workspaceProjects.find((item) => item.id === projectID) ?? null;
+  state.selectedProjectID = projectID;
+  state.selectedEnvironmentID = "";
+  state.environment = null;
+  state.workspaceEnvironments = [];
+  markSelected(document.querySelector("#project-list"), projectID);
+  saveSession();
+  document.querySelector("#add-environment").disabled = false;
+  document.querySelector("#issue-key").disabled = true;
+  document.querySelector("#new-key-notice").hidden = true;
+  try {
+    const response = await api(`/v1/projects/${encodeURIComponent(projectID)}/environments`, {
+      method: "GET",
+      authenticated: true,
+    });
+    const environments = Array.isArray(response.environments) ? response.environments : [];
+    if (!environments.every((item) => typeof item.id === "string" && typeof item.name === "string")) {
+      throw new Error("AuthForge returned an unexpected environment list.");
+    }
+    state.workspaceEnvironments = environments;
+    const selected = environments.find((item) => item.id === previousEnvironmentID);
+    const environmentID = selected?.id ?? environments[0]?.id ?? "";
+    renderResourceOptions(
+      document.querySelector("#environment-list"),
+      environments,
+      environmentID,
+      () => "Environment",
+      selectEnvironment,
+    );
+    if (environmentID) await selectEnvironment(environmentID);
+    else {
+      state.environment = null;
+      addEmptyMessage(document.querySelector("#key-list"), "Choose an environment.");
+    }
+  } catch (error) {
+    handleError(notice, error);
+  }
+}
+
+async function selectEnvironment(environmentID) {
+  const notice = document.querySelector("#workspace-notice");
+  state.environment = state.workspaceEnvironments.find((item) => item.id === environmentID) ?? null;
+  state.selectedEnvironmentID = environmentID;
+  markSelected(document.querySelector("#environment-list"), environmentID);
+  document.querySelector("#new-key-notice").hidden = true;
+  saveSession();
+  document.querySelector("#issue-key").disabled = false;
+  try {
+    const response = await api(`/v1/environments/${encodeURIComponent(environmentID)}/api-keys`, {
+      method: "GET",
+      authenticated: true,
+    });
+    const keys = Array.isArray(response.keys) ? response.keys : [];
+    if (!keys.every((item) => typeof item.id === "string" && typeof item.prefix === "string" && typeof item.status === "string")) {
+      throw new Error("AuthForge returned an unexpected API key list.");
+    }
+    renderKeyRows(keys);
+  } catch (error) {
+    handleError(notice, error);
+  }
+}
+
+async function revokeAPIKey(keyID, prefix) {
+  if (!window.confirm(`Revoke API key ${prefix}? Applications using it will no longer be able to authenticate.`)) return;
+  const notice = document.querySelector("#workspace-notice");
+  try {
+    await api(`/v1/api-keys/${encodeURIComponent(keyID)}`, {
+      method: "DELETE",
+      authenticated: true,
+    });
+    await selectEnvironment(state.selectedEnvironmentID);
+  } catch (error) {
+    handleError(notice, error);
+  }
+}
+
+function startSetup(step, organization = null, project = null) {
+  state.organization = organization;
+  state.project = project;
+  state.environment = null;
+  state.key = "";
+  state.step = step;
+  saveSession();
+  clearNotice(setupNotice);
+  renderStep();
 }
 
 function handleError(element, error) {
@@ -219,10 +510,17 @@ authForm.addEventListener("submit", async (event) => {
     state.project = null;
     state.environment = null;
     state.key = "";
-    state.step = "organization";
-    saveSession();
-    clearNotice(setupNotice);
-    renderStep();
+    state.selectedOrganizationID = "";
+    state.selectedProjectID = "";
+    state.selectedEnvironmentID = "";
+    if (signup) {
+      state.step = "organization";
+      saveSession();
+      clearNotice(setupNotice);
+      renderStep();
+    } else {
+      await openWorkspace();
+    }
   } catch (error) {
     handleError(authNotice, error);
   } finally {
@@ -241,6 +539,7 @@ document.querySelector("#organization-form").addEventListener("submit", async (e
       body: { name: String(values.get("name")).trim(), slug: String(values.get("slug")).trim() },
       authenticated: true,
     });
+    state.selectedOrganizationID = state.organization.id;
     state.step = "project";
     saveSession();
     renderStep();
@@ -266,6 +565,7 @@ document.querySelector("#project-form").addEventListener("submit", async (event)
       },
       authenticated: true,
     });
+    state.selectedProjectID = state.project.id;
     state.step = "environment";
     saveSession();
     renderStep();
@@ -287,6 +587,7 @@ document.querySelector("#environment-form").addEventListener("submit", async (ev
       body: { project_id: state.project.id, name: String(values.get("name")) },
       authenticated: true,
     });
+    state.selectedEnvironmentID = state.environment.id;
     state.step = "key";
     saveSession();
     renderStep();
@@ -344,14 +645,50 @@ document.querySelector("#copy-key").addEventListener("click", async () => {
 });
 
 document.querySelector("#new-workspace").addEventListener("click", () => {
-  state.organization = null;
-  state.project = null;
-  state.environment = null;
-  state.key = "";
-  state.step = "organization";
-  saveSession();
-  clearNotice(setupNotice);
-  renderStep();
+  openWorkspace();
+});
+
+document.querySelector("#refresh-workspaces").addEventListener("click", loadOrganizations);
+document.querySelector("#add-organization").addEventListener("click", () => startSetup("organization"));
+document.querySelector("#add-project").addEventListener("click", () => {
+  if (state.organization) startSetup("project", state.organization);
+});
+document.querySelector("#add-environment").addEventListener("click", () => {
+  if (state.organization && state.project) startSetup("environment", state.organization, state.project);
+});
+
+document.querySelector("#issue-key").addEventListener("click", async () => {
+  const notice = document.querySelector("#workspace-notice");
+  clearNotice(notice);
+  try {
+    const response = await api("/v1/api-keys", {
+      body: { environment_id: state.selectedEnvironmentID, key_class: "publishable" },
+      authenticated: true,
+    });
+    if (typeof response.key !== "string" || response.key.length === 0) {
+      throw new Error("AuthForge did not return an API key.");
+    }
+    await selectEnvironment(state.selectedEnvironmentID);
+    document.querySelector("#new-key-value").textContent = response.key;
+    document.querySelector("#new-key-notice").hidden = false;
+  } catch (error) {
+    handleError(notice, error);
+  }
+});
+
+document.querySelector("#copy-new-key").addEventListener("click", async () => {
+  const notice = document.querySelector("#workspace-notice");
+  try {
+    await navigator.clipboard.writeText(document.querySelector("#new-key-value").textContent);
+    showNotice(notice, "New key copied. Store it securely; AuthForge won’t show it again.");
+  } catch {
+    const range = document.createRange();
+    range.selectNodeContents(document.querySelector("#new-key-value"));
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    showNotice(notice, "Select the highlighted key and copy it now.");
+  }
 });
 
 document.querySelector("#logout-button").addEventListener("click", () => {
@@ -364,13 +701,20 @@ document.querySelector("#logout-button").addEventListener("click", () => {
   state.environment = null;
   state.key = "";
   state.step = "organization";
+  state.selectedOrganizationID = "";
+  state.selectedProjectID = "";
+  state.selectedEnvironmentID = "";
   accountBar.hidden = true;
   authView.hidden = false;
   setupView.hidden = true;
+  workspaceView.hidden = true;
   authForm.reset();
   switchAuthMode("login");
 });
 
 restoreSession();
-if (state.accessToken && state.account) renderStep();
+if (state.accessToken && state.account && state.step === "workspace") {
+  showWorkspaceView();
+  loadOrganizations();
+} else if (state.accessToken && state.account) renderStep();
 else switchAuthMode("signup");

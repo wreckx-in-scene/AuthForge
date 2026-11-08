@@ -24,9 +24,14 @@ const (
 	TenantService_RequestPasswordReset_FullMethodName = "/authforge.tenant.v1.TenantService/RequestPasswordReset"
 	TenantService_ResetPassword_FullMethodName        = "/authforge.tenant.v1.TenantService/ResetPassword"
 	TenantService_CreateOrganization_FullMethodName   = "/authforge.tenant.v1.TenantService/CreateOrganization"
+	TenantService_ListOrganizations_FullMethodName    = "/authforge.tenant.v1.TenantService/ListOrganizations"
 	TenantService_CreateProject_FullMethodName        = "/authforge.tenant.v1.TenantService/CreateProject"
+	TenantService_ListProjects_FullMethodName         = "/authforge.tenant.v1.TenantService/ListProjects"
 	TenantService_CreateEnvironment_FullMethodName    = "/authforge.tenant.v1.TenantService/CreateEnvironment"
+	TenantService_ListEnvironments_FullMethodName     = "/authforge.tenant.v1.TenantService/ListEnvironments"
 	TenantService_IssueAPIKey_FullMethodName          = "/authforge.tenant.v1.TenantService/IssueAPIKey"
+	TenantService_ListAPIKeys_FullMethodName          = "/authforge.tenant.v1.TenantService/ListAPIKeys"
+	TenantService_RevokeAPIKey_FullMethodName         = "/authforge.tenant.v1.TenantService/RevokeAPIKey"
 	TenantService_ResolveAPIKey_FullMethodName        = "/authforge.tenant.v1.TenantService/ResolveAPIKey"
 )
 
@@ -39,9 +44,14 @@ type TenantServiceClient interface {
 	RequestPasswordReset(ctx context.Context, in *RequestPasswordResetRequest, opts ...grpc.CallOption) (*RequestPasswordResetResponse, error)
 	ResetPassword(ctx context.Context, in *ResetPasswordRequest, opts ...grpc.CallOption) (*ResetPasswordResponse, error)
 	CreateOrganization(ctx context.Context, in *CreateOrganizationRequest, opts ...grpc.CallOption) (*CreateOrganizationResponse, error)
+	ListOrganizations(ctx context.Context, in *ListOrganizationsRequest, opts ...grpc.CallOption) (*ListOrganizationsResponse, error)
 	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*CreateProjectResponse, error)
+	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...grpc.CallOption) (*ListProjectsResponse, error)
 	CreateEnvironment(ctx context.Context, in *CreateEnvironmentRequest, opts ...grpc.CallOption) (*CreateEnvironmentResponse, error)
+	ListEnvironments(ctx context.Context, in *ListEnvironmentsRequest, opts ...grpc.CallOption) (*ListEnvironmentsResponse, error)
 	IssueAPIKey(ctx context.Context, in *IssueAPIKeyRequest, opts ...grpc.CallOption) (*IssueAPIKeyResponse, error)
+	ListAPIKeys(ctx context.Context, in *ListAPIKeysRequest, opts ...grpc.CallOption) (*ListAPIKeysResponse, error)
+	RevokeAPIKey(ctx context.Context, in *RevokeAPIKeyRequest, opts ...grpc.CallOption) (*RevokeAPIKeyResponse, error)
 	ResolveAPIKey(ctx context.Context, in *ResolveAPIKeyRequest, opts ...grpc.CallOption) (*ResolveAPIKeyResponse, error)
 }
 
@@ -103,10 +113,30 @@ func (c *tenantServiceClient) CreateOrganization(ctx context.Context, in *Create
 	return out, nil
 }
 
+func (c *tenantServiceClient) ListOrganizations(ctx context.Context, in *ListOrganizationsRequest, opts ...grpc.CallOption) (*ListOrganizationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListOrganizationsResponse)
+	err := c.cc.Invoke(ctx, TenantService_ListOrganizations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tenantServiceClient) CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*CreateProjectResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateProjectResponse)
 	err := c.cc.Invoke(ctx, TenantService_CreateProject_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantServiceClient) ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...grpc.CallOption) (*ListProjectsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProjectsResponse)
+	err := c.cc.Invoke(ctx, TenantService_ListProjects_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,10 +153,40 @@ func (c *tenantServiceClient) CreateEnvironment(ctx context.Context, in *CreateE
 	return out, nil
 }
 
+func (c *tenantServiceClient) ListEnvironments(ctx context.Context, in *ListEnvironmentsRequest, opts ...grpc.CallOption) (*ListEnvironmentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListEnvironmentsResponse)
+	err := c.cc.Invoke(ctx, TenantService_ListEnvironments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tenantServiceClient) IssueAPIKey(ctx context.Context, in *IssueAPIKeyRequest, opts ...grpc.CallOption) (*IssueAPIKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(IssueAPIKeyResponse)
 	err := c.cc.Invoke(ctx, TenantService_IssueAPIKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantServiceClient) ListAPIKeys(ctx context.Context, in *ListAPIKeysRequest, opts ...grpc.CallOption) (*ListAPIKeysResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAPIKeysResponse)
+	err := c.cc.Invoke(ctx, TenantService_ListAPIKeys_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantServiceClient) RevokeAPIKey(ctx context.Context, in *RevokeAPIKeyRequest, opts ...grpc.CallOption) (*RevokeAPIKeyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevokeAPIKeyResponse)
+	err := c.cc.Invoke(ctx, TenantService_RevokeAPIKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -152,9 +212,14 @@ type TenantServiceServer interface {
 	RequestPasswordReset(context.Context, *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error)
 	ResetPassword(context.Context, *ResetPasswordRequest) (*ResetPasswordResponse, error)
 	CreateOrganization(context.Context, *CreateOrganizationRequest) (*CreateOrganizationResponse, error)
+	ListOrganizations(context.Context, *ListOrganizationsRequest) (*ListOrganizationsResponse, error)
 	CreateProject(context.Context, *CreateProjectRequest) (*CreateProjectResponse, error)
+	ListProjects(context.Context, *ListProjectsRequest) (*ListProjectsResponse, error)
 	CreateEnvironment(context.Context, *CreateEnvironmentRequest) (*CreateEnvironmentResponse, error)
+	ListEnvironments(context.Context, *ListEnvironmentsRequest) (*ListEnvironmentsResponse, error)
 	IssueAPIKey(context.Context, *IssueAPIKeyRequest) (*IssueAPIKeyResponse, error)
+	ListAPIKeys(context.Context, *ListAPIKeysRequest) (*ListAPIKeysResponse, error)
+	RevokeAPIKey(context.Context, *RevokeAPIKeyRequest) (*RevokeAPIKeyResponse, error)
 	ResolveAPIKey(context.Context, *ResolveAPIKeyRequest) (*ResolveAPIKeyResponse, error)
 	mustEmbedUnimplementedTenantServiceServer()
 }
@@ -181,14 +246,29 @@ func (UnimplementedTenantServiceServer) ResetPassword(context.Context, *ResetPas
 func (UnimplementedTenantServiceServer) CreateOrganization(context.Context, *CreateOrganizationRequest) (*CreateOrganizationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrganization not implemented")
 }
+func (UnimplementedTenantServiceServer) ListOrganizations(context.Context, *ListOrganizationsRequest) (*ListOrganizationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListOrganizations not implemented")
+}
 func (UnimplementedTenantServiceServer) CreateProject(context.Context, *CreateProjectRequest) (*CreateProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProject not implemented")
+}
+func (UnimplementedTenantServiceServer) ListProjects(context.Context, *ListProjectsRequest) (*ListProjectsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListProjects not implemented")
 }
 func (UnimplementedTenantServiceServer) CreateEnvironment(context.Context, *CreateEnvironmentRequest) (*CreateEnvironmentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEnvironment not implemented")
 }
+func (UnimplementedTenantServiceServer) ListEnvironments(context.Context, *ListEnvironmentsRequest) (*ListEnvironmentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListEnvironments not implemented")
+}
 func (UnimplementedTenantServiceServer) IssueAPIKey(context.Context, *IssueAPIKeyRequest) (*IssueAPIKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IssueAPIKey not implemented")
+}
+func (UnimplementedTenantServiceServer) ListAPIKeys(context.Context, *ListAPIKeysRequest) (*ListAPIKeysResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAPIKeys not implemented")
+}
+func (UnimplementedTenantServiceServer) RevokeAPIKey(context.Context, *RevokeAPIKeyRequest) (*RevokeAPIKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevokeAPIKey not implemented")
 }
 func (UnimplementedTenantServiceServer) ResolveAPIKey(context.Context, *ResolveAPIKeyRequest) (*ResolveAPIKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResolveAPIKey not implemented")
@@ -304,6 +384,24 @@ func _TenantService_CreateOrganization_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TenantService_ListOrganizations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListOrganizationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).ListOrganizations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_ListOrganizations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).ListOrganizations(ctx, req.(*ListOrganizationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TenantService_CreateProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateProjectRequest)
 	if err := dec(in); err != nil {
@@ -318,6 +416,24 @@ func _TenantService_CreateProject_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TenantServiceServer).CreateProject(ctx, req.(*CreateProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantService_ListProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProjectsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).ListProjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_ListProjects_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).ListProjects(ctx, req.(*ListProjectsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -340,6 +456,24 @@ func _TenantService_CreateEnvironment_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TenantService_ListEnvironments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEnvironmentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).ListEnvironments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_ListEnvironments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).ListEnvironments(ctx, req.(*ListEnvironmentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TenantService_IssueAPIKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(IssueAPIKeyRequest)
 	if err := dec(in); err != nil {
@@ -354,6 +488,42 @@ func _TenantService_IssueAPIKey_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TenantServiceServer).IssueAPIKey(ctx, req.(*IssueAPIKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantService_ListAPIKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAPIKeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).ListAPIKeys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_ListAPIKeys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).ListAPIKeys(ctx, req.(*ListAPIKeysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantService_RevokeAPIKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeAPIKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).RevokeAPIKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_RevokeAPIKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).RevokeAPIKey(ctx, req.(*RevokeAPIKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -404,16 +574,36 @@ var TenantService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TenantService_CreateOrganization_Handler,
 		},
 		{
+			MethodName: "ListOrganizations",
+			Handler:    _TenantService_ListOrganizations_Handler,
+		},
+		{
 			MethodName: "CreateProject",
 			Handler:    _TenantService_CreateProject_Handler,
+		},
+		{
+			MethodName: "ListProjects",
+			Handler:    _TenantService_ListProjects_Handler,
 		},
 		{
 			MethodName: "CreateEnvironment",
 			Handler:    _TenantService_CreateEnvironment_Handler,
 		},
 		{
+			MethodName: "ListEnvironments",
+			Handler:    _TenantService_ListEnvironments_Handler,
+		},
+		{
 			MethodName: "IssueAPIKey",
 			Handler:    _TenantService_IssueAPIKey_Handler,
+		},
+		{
+			MethodName: "ListAPIKeys",
+			Handler:    _TenantService_ListAPIKeys_Handler,
+		},
+		{
+			MethodName: "RevokeAPIKey",
+			Handler:    _TenantService_RevokeAPIKey_Handler,
 		},
 		{
 			MethodName: "ResolveAPIKey",

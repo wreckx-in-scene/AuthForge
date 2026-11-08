@@ -16,6 +16,7 @@ func TestHandlerServesDashboardAndAssets(t *testing.T) {
 	}{
 		{path: "/", contentType: "text/html", contains: "AuthForge Console"},
 		{path: "/assets/app.js", contentType: "text/javascript", contains: "/v1/console/signup"},
+		{path: "/assets/app.js", contentType: "text/javascript", contains: "/v1/environments/${encodeURIComponent(environmentID)}/api-keys"},
 		{path: "/assets/styles.css", contentType: "text/css", contains: ".auth-layout"},
 	} {
 		rec := httptest.NewRecorder()

@@ -50,6 +50,15 @@ type IssuedKey struct {
 	Prefix        string
 }
 
+type APIKey struct {
+	ID            string
+	EnvironmentID string
+	KeyClass      string
+	Prefix        string
+	Status        string
+	CreatedAt     int64
+}
+
 type ResolvedKey struct {
 	KeyID           string
 	OrganizationID  string
@@ -244,6 +253,36 @@ func (s *Store) CreateOrganization(ctx context.Context, accountID, name, slug st
 	return org, nil
 }
 
+func (s *Store) ListOrganizations(ctx context.Context, accountID string) ([]Organization, error) {
+	if err := id.Parse(accountID); err != nil {
+		return nil, err
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT o.id::text, o.name, o.slug
+		FROM tenant.organizations o
+		JOIN tenant.organization_members m ON m.organization_id = o.id
+		WHERE m.account_id = $1
+		ORDER BY o.created_at, o.id
+	`, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	organizations := make([]Organization, 0)
+	for rows.Next() {
+		var organization Organization
+		if err := rows.Scan(&organization.ID, &organization.Name, &organization.Slug); err != nil {
+			return nil, err
+		}
+		organizations = append(organizations, organization)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return organizations, nil
+}
+
 func (s *Store) CreateProject(ctx context.Context, accountID, organizationID, name, slug string) (Project, error) {
 	if err := id.Parse(accountID, organizationID); err != nil {
 		return Project{}, err
@@ -272,6 +311,47 @@ func (s *Store) CreateProject(ctx context.Context, accountID, organizationID, na
 		return Project{}, err
 	}
 	return project, nil
+}
+
+func (s *Store) ListProjects(ctx context.Context, accountID, organizationID string) ([]Project, error) {
+	if err := id.Parse(accountID, organizationID); err != nil {
+		return nil, err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+	if err := requireMember(ctx, tx, organizationID, accountID); err != nil {
+		return nil, err
+	}
+	rows, err := tx.Query(ctx, `
+		SELECT id::text, organization_id::text, name, slug
+		FROM tenant.projects
+		WHERE organization_id = $1
+		ORDER BY created_at, id
+	`, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	projects := make([]Project, 0)
+	for rows.Next() {
+		var project Project
+		if err := rows.Scan(&project.ID, &project.OrganizationID, &project.Name, &project.Slug); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		projects = append(projects, project)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close()
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return projects, nil
 }
 
 func (s *Store) CreateEnvironment(ctx context.Context, accountID, projectID, name string) (Environment, error) {
@@ -312,6 +392,58 @@ func (s *Store) CreateEnvironment(ctx context.Context, accountID, projectID, nam
 		return Environment{}, err
 	}
 	return env, nil
+}
+
+func (s *Store) ListEnvironments(ctx context.Context, accountID, projectID string) ([]Environment, error) {
+	if err := id.Parse(accountID, projectID); err != nil {
+		return nil, err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	var organizationID string
+	err = tx.QueryRow(ctx, `SELECT organization_id::text FROM tenant.projects WHERE id = $1`, projectID).Scan(&organizationID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, errs.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := requireMember(ctx, tx, organizationID, accountID); err != nil {
+		return nil, err
+	}
+	rows, err := tx.Query(ctx, `
+		SELECT id::text, project_id::text, organization_id::text, name
+		FROM tenant.environments
+		WHERE project_id = $1
+		ORDER BY created_at, id
+	`, projectID)
+	if err != nil {
+		return nil, err
+	}
+	environments := make([]Environment, 0)
+	for rows.Next() {
+		var environment Environment
+		if err := rows.Scan(
+			&environment.ID, &environment.ProjectID, &environment.OrganizationID, &environment.Name,
+		); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		environments = append(environments, environment)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close()
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return environments, nil
 }
 
 func (s *Store) ResolveEnvironmentName(ctx context.Context, accountID, environmentID string) (string, error) {
@@ -382,6 +514,86 @@ func (s *Store) InsertAPIKey(ctx context.Context, accountID, environmentID, clas
 		return IssuedKey{}, err
 	}
 	return issued, nil
+}
+
+func (s *Store) ListAPIKeys(ctx context.Context, accountID, environmentID string) ([]APIKey, error) {
+	if err := id.Parse(accountID, environmentID); err != nil {
+		return nil, err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	var organizationID string
+	err = tx.QueryRow(ctx, `SELECT organization_id::text FROM tenant.environments WHERE id = $1`, environmentID).Scan(&organizationID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, errs.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := requireMember(ctx, tx, organizationID, accountID); err != nil {
+		return nil, err
+	}
+	rows, err := tx.Query(ctx, `
+		SELECT id::text, environment_id::text, key_class, prefix, status,
+		       floor(extract(epoch FROM created_at))::bigint
+		FROM tenant.api_keys
+		WHERE environment_id = $1
+		ORDER BY created_at, id
+	`, environmentID)
+	if err != nil {
+		return nil, err
+	}
+	keys := make([]APIKey, 0)
+	for rows.Next() {
+		var key APIKey
+		if err := rows.Scan(
+			&key.ID, &key.EnvironmentID, &key.KeyClass, &key.Prefix, &key.Status, &key.CreatedAt,
+		); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		keys = append(keys, key)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close()
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return keys, nil
+}
+
+func (s *Store) RevokeAPIKey(ctx context.Context, accountID, keyID string) error {
+	if err := id.Parse(accountID, keyID); err != nil {
+		return err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var organizationID string
+	err = tx.QueryRow(ctx, `SELECT organization_id::text FROM tenant.api_keys WHERE id = $1`, keyID).Scan(&organizationID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return errs.ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if err := requireMember(ctx, tx, organizationID, accountID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE tenant.api_keys SET status = 'revoked' WHERE id = $1`, keyID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (s *Store) ResolveAPIKey(ctx context.Context, keyHash []byte) (ResolvedKey, error) {

@@ -139,4 +139,4 @@ Decision. The gateway serves a same-origin, dependency-free console for account 
 
 Alternative. Add a separately deployed frontend and cross-origin API configuration before the console workflows are established.
 
-Tradeoff. The first console ships with the existing Compose stack and avoids CORS configuration. It is intentionally limited to setup; it does not yet list or manage existing organizations, projects, environments, or keys.
+Tradeoff. The console ships with the existing Compose stack and avoids CORS configuration. It supports initial setup and management of existing organizations, projects, environments, and API keys. Key secrets are shown only at issuance; lists expose metadata only, and revocation is permanent.

@@ -71,9 +71,14 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/password-reset/request", s.requestPasswordReset)
 	mux.HandleFunc("POST /v1/password-reset/confirm", s.confirmPasswordReset)
 	mux.HandleFunc("POST /v1/organizations", s.createOrganization)
+	mux.HandleFunc("GET /v1/organizations", s.listOrganizations)
+	mux.HandleFunc("GET /v1/organizations/{organizationID}/projects", s.listProjects)
 	mux.HandleFunc("POST /v1/projects", s.createProject)
+	mux.HandleFunc("GET /v1/projects/{projectID}/environments", s.listEnvironments)
 	mux.HandleFunc("POST /v1/environments", s.createEnvironment)
 	mux.HandleFunc("POST /v1/api-keys", s.issueAPIKey)
+	mux.HandleFunc("GET /v1/environments/{environmentID}/api-keys", s.listAPIKeys)
+	mux.HandleFunc("DELETE /v1/api-keys/{keyID}", s.revokeAPIKey)
 	mux.HandleFunc("POST /v1/signup", s.signup)
 	mux.HandleFunc("POST /v1/login", s.login)
 	mux.HandleFunc("POST /v1/oauth/google/nonce", s.googleNonce)
@@ -188,6 +193,27 @@ func (s *Server) createOrganization(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]any{"id": resp.GetId(), "name": resp.GetName(), "slug": resp.GetSlug()})
 }
 
+func (s *Server) listOrganizations(w http.ResponseWriter, r *http.Request) {
+	accountID, ok := s.consoleAccount(w, r)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.ListOrganizations(ctx, &tenantv1.ListOrganizationsRequest{AccountId: accountID})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	organizations := make([]map[string]string, 0, len(resp.GetOrganizations()))
+	for _, organization := range resp.GetOrganizations() {
+		organizations = append(organizations, map[string]string{
+			"id": organization.GetId(), "name": organization.GetName(), "slug": organization.GetSlug(),
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"organizations": organizations})
+}
+
 func (s *Server) createProject(w http.ResponseWriter, r *http.Request) {
 	accountID, ok := s.consoleAccount(w, r)
 	if !ok {
@@ -221,6 +247,30 @@ func (s *Server) createProject(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Server) listProjects(w http.ResponseWriter, r *http.Request) {
+	accountID, ok := s.consoleAccount(w, r)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.ListProjects(ctx, &tenantv1.ListProjectsRequest{
+		AccountId: accountID, OrganizationId: r.PathValue("organizationID"),
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	projects := make([]map[string]string, 0, len(resp.GetProjects()))
+	for _, project := range resp.GetProjects() {
+		projects = append(projects, map[string]string{
+			"id": project.GetId(), "organization_id": project.GetOrganizationId(),
+			"name": project.GetName(), "slug": project.GetSlug(),
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"projects": projects})
+}
+
 func (s *Server) createEnvironment(w http.ResponseWriter, r *http.Request) {
 	accountID, ok := s.consoleAccount(w, r)
 	if !ok {
@@ -250,6 +300,30 @@ func (s *Server) createEnvironment(w http.ResponseWriter, r *http.Request) {
 		"organization_id": resp.GetOrganizationId(),
 		"name":            resp.GetName(),
 	})
+}
+
+func (s *Server) listEnvironments(w http.ResponseWriter, r *http.Request) {
+	accountID, ok := s.consoleAccount(w, r)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.ListEnvironments(ctx, &tenantv1.ListEnvironmentsRequest{
+		AccountId: accountID, ProjectId: r.PathValue("projectID"),
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	environments := make([]map[string]string, 0, len(resp.GetEnvironments()))
+	for _, environment := range resp.GetEnvironments() {
+		environments = append(environments, map[string]string{
+			"id": environment.GetId(), "project_id": environment.GetProjectId(),
+			"organization_id": environment.GetOrganizationId(), "name": environment.GetName(),
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"environments": environments})
 }
 
 func (s *Server) issueAPIKey(w http.ResponseWriter, r *http.Request) {
@@ -282,6 +356,48 @@ func (s *Server) issueAPIKey(w http.ResponseWriter, r *http.Request) {
 		"key_class":      resp.GetKeyClass(),
 		"prefix":         resp.GetPrefix(),
 	})
+}
+
+func (s *Server) listAPIKeys(w http.ResponseWriter, r *http.Request) {
+	accountID, ok := s.consoleAccount(w, r)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.ListAPIKeys(ctx, &tenantv1.ListAPIKeysRequest{
+		AccountId: accountID, EnvironmentId: r.PathValue("environmentID"),
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	keys := make([]map[string]any, 0, len(resp.GetKeys()))
+	for _, key := range resp.GetKeys() {
+		keys = append(keys, map[string]any{
+			"id": key.GetId(), "environment_id": key.GetEnvironmentId(),
+			"key_class": key.GetKeyClass(), "prefix": key.GetPrefix(),
+			"status": key.GetStatus(), "created_at": key.GetCreatedAt(),
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"keys": keys})
+}
+
+func (s *Server) revokeAPIKey(w http.ResponseWriter, r *http.Request) {
+	accountID, ok := s.consoleAccount(w, r)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.RevokeAPIKey(ctx, &tenantv1.RevokeAPIKeyRequest{
+		AccountId: accountID, KeyId: r.PathValue("keyID"),
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"revoked": resp.GetRevoked()})
 }
 
 func (s *Server) signup(w http.ResponseWriter, r *http.Request) {

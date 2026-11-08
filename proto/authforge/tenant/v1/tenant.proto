@@ -10,9 +10,14 @@ service TenantService {
   rpc RequestPasswordReset(RequestPasswordResetRequest) returns (RequestPasswordResetResponse);
   rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
   rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse);
+  rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsResponse);
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
   rpc CreateEnvironment(CreateEnvironmentRequest) returns (CreateEnvironmentResponse);
+  rpc ListEnvironments(ListEnvironmentsRequest) returns (ListEnvironmentsResponse);
   rpc IssueAPIKey(IssueAPIKeyRequest) returns (IssueAPIKeyResponse);
+  rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse);
+  rpc RevokeAPIKey(RevokeAPIKeyRequest) returns (RevokeAPIKeyResponse);
   rpc ResolveAPIKey(ResolveAPIKeyRequest) returns (ResolveAPIKeyResponse);
 }
 
@@ -74,6 +79,20 @@ message CreateOrganizationResponse {
   string slug = 3;
 }
 
+message ListOrganizationsRequest {
+  string account_id = 1;
+}
+
+message OrganizationRecord {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+}
+
+message ListOrganizationsResponse {
+  repeated OrganizationRecord organizations = 1;
+}
+
 message CreateProjectRequest {
   string account_id = 1;
   string organization_id = 2;
@@ -86,6 +105,22 @@ message CreateProjectResponse {
   string organization_id = 2;
   string name = 3;
   string slug = 4;
+}
+
+message ListProjectsRequest {
+  string account_id = 1;
+  string organization_id = 2;
+}
+
+message ProjectRecord {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+  string slug = 4;
+}
+
+message ListProjectsResponse {
+  repeated ProjectRecord projects = 1;
 }
 
 message CreateEnvironmentRequest {
@@ -101,6 +136,22 @@ message CreateEnvironmentResponse {
   string name = 4;
 }
 
+message ListEnvironmentsRequest {
+  string account_id = 1;
+  string project_id = 2;
+}
+
+message EnvironmentRecord {
+  string id = 1;
+  string project_id = 2;
+  string organization_id = 3;
+  string name = 4;
+}
+
+message ListEnvironmentsResponse {
+  repeated EnvironmentRecord environments = 1;
+}
+
 message IssueAPIKeyRequest {
   string account_id = 1;
   string environment_id = 2;
@@ -113,6 +164,33 @@ message IssueAPIKeyResponse {
   string key = 3;
   string key_class = 4;
   string prefix = 5;
+}
+
+message ListAPIKeysRequest {
+  string account_id = 1;
+  string environment_id = 2;
+}
+
+message APIKeyRecord {
+  string id = 1;
+  string environment_id = 2;
+  string key_class = 3;
+  string prefix = 4;
+  string status = 5;
+  int64 created_at = 6;
+}
+
+message ListAPIKeysResponse {
+  repeated APIKeyRecord keys = 1;
+}
+
+message RevokeAPIKeyRequest {
+  string account_id = 1;
+  string key_id = 2;
+}
+
+message RevokeAPIKeyResponse {
+  bool revoked = 1;
 }
 
 message ResolveAPIKeyRequest {

@@ -44,7 +44,7 @@ An expired, unknown, or previously used token returns `401` with `invalid_reset_
 
 Both return `access_token`, `expires_at`, and `account`.
 
-The gateway also serves a first-party developer console at `/`. It uses these console endpoints to create an account and initial workspace. The console token is kept in tab-scoped session storage and is cleared by Sign out; signing out in the current API does not revoke the stateless token, which remains valid until its expiry. The console issues a publishable key only and displays the returned key once.
+The gateway also serves a first-party developer console at `/`. It uses these console endpoints to create an account and initial workspace, then browse and manage the account's organizations, projects, environments, and API keys. The console token is kept in tab-scoped session storage and is cleared by Sign out; signing out in the current API does not revoke the stateless token, which remains valid until its expiry. The console issues publishable keys only and displays each returned key once.
 
 `POST /v1/organizations`
 
@@ -73,6 +73,18 @@ The gateway also serves a first-party developer console at `/`. It uses these co
 ```
 
 `key_class` is `publishable` or `secret`. The `key` field is the only copy of the secret.
+
+All workspace management routes below require the console bearer token and return only resources the authenticated account is authorized to access:
+
+`GET /v1/organizations` returns `{ "organizations": [{ "id", "name", "slug" }] }`.
+
+`GET /v1/organizations/{organizationID}/projects` returns `{ "projects": [{ "id", "organization_id", "name", "slug" }] }`.
+
+`GET /v1/projects/{projectID}/environments` returns `{ "environments": [{ "id", "project_id", "organization_id", "name" }] }`.
+
+`GET /v1/environments/{environmentID}/api-keys` returns key metadata in `{ "keys": [...] }`: each item includes `id`, `environment_id`, `key_class`, `prefix`, `status`, and `created_at` (Unix seconds). It never returns key secrets.
+
+`DELETE /v1/api-keys/{keyID}` revokes an account-owned key and returns `{ "revoked": true }`. Revocation is permanent; an already revoked key remains revoked.
 
 ## Application auth
 

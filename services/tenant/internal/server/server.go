@@ -152,6 +152,22 @@ func (s *Server) CreateOrganization(ctx context.Context, req *tenantv1.CreateOrg
 	return &tenantv1.CreateOrganizationResponse{Id: org.ID, Name: org.Name, Slug: org.Slug}, nil
 }
 
+func (s *Server) ListOrganizations(ctx context.Context, req *tenantv1.ListOrganizationsRequest) (*tenantv1.ListOrganizationsResponse, error) {
+	organizations, err := s.store.ListOrganizations(ctx, req.GetAccountId())
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	response := &tenantv1.ListOrganizationsResponse{
+		Organizations: make([]*tenantv1.OrganizationRecord, 0, len(organizations)),
+	}
+	for _, organization := range organizations {
+		response.Organizations = append(response.Organizations, &tenantv1.OrganizationRecord{
+			Id: organization.ID, Name: organization.Name, Slug: organization.Slug,
+		})
+	}
+	return response, nil
+}
+
 func (s *Server) CreateProject(ctx context.Context, req *tenantv1.CreateProjectRequest) (*tenantv1.CreateProjectResponse, error) {
 	name, err := personName(req.GetName())
 	if err != nil {
@@ -173,6 +189,22 @@ func (s *Server) CreateProject(ctx context.Context, req *tenantv1.CreateProjectR
 	}, nil
 }
 
+func (s *Server) ListProjects(ctx context.Context, req *tenantv1.ListProjectsRequest) (*tenantv1.ListProjectsResponse, error) {
+	projects, err := s.store.ListProjects(ctx, req.GetAccountId(), req.GetOrganizationId())
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	response := &tenantv1.ListProjectsResponse{
+		Projects: make([]*tenantv1.ProjectRecord, 0, len(projects)),
+	}
+	for _, project := range projects {
+		response.Projects = append(response.Projects, &tenantv1.ProjectRecord{
+			Id: project.ID, OrganizationId: project.OrganizationID, Name: project.Name, Slug: project.Slug,
+		})
+	}
+	return response, nil
+}
+
 func (s *Server) CreateEnvironment(ctx context.Context, req *tenantv1.CreateEnvironmentRequest) (*tenantv1.CreateEnvironmentResponse, error) {
 	name, err := normalize.Slug(req.GetName(), "")
 	if err != nil {
@@ -188,6 +220,23 @@ func (s *Server) CreateEnvironment(ctx context.Context, req *tenantv1.CreateEnvi
 		OrganizationId: env.OrganizationID,
 		Name:           env.Name,
 	}, nil
+}
+
+func (s *Server) ListEnvironments(ctx context.Context, req *tenantv1.ListEnvironmentsRequest) (*tenantv1.ListEnvironmentsResponse, error) {
+	environments, err := s.store.ListEnvironments(ctx, req.GetAccountId(), req.GetProjectId())
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	response := &tenantv1.ListEnvironmentsResponse{
+		Environments: make([]*tenantv1.EnvironmentRecord, 0, len(environments)),
+	}
+	for _, environment := range environments {
+		response.Environments = append(response.Environments, &tenantv1.EnvironmentRecord{
+			Id: environment.ID, ProjectId: environment.ProjectID,
+			OrganizationId: environment.OrganizationID, Name: environment.Name,
+		})
+	}
+	return response, nil
 }
 
 func (s *Server) IssueAPIKey(ctx context.Context, req *tenantv1.IssueAPIKeyRequest) (*tenantv1.IssueAPIKeyResponse, error) {
@@ -218,6 +267,30 @@ func (s *Server) IssueAPIKey(ctx context.Context, req *tenantv1.IssueAPIKeyReque
 		KeyClass:      issued.KeyClass,
 		Prefix:        issued.Prefix,
 	}, nil
+}
+
+func (s *Server) ListAPIKeys(ctx context.Context, req *tenantv1.ListAPIKeysRequest) (*tenantv1.ListAPIKeysResponse, error) {
+	keys, err := s.store.ListAPIKeys(ctx, req.GetAccountId(), req.GetEnvironmentId())
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	response := &tenantv1.ListAPIKeysResponse{
+		Keys: make([]*tenantv1.APIKeyRecord, 0, len(keys)),
+	}
+	for _, key := range keys {
+		response.Keys = append(response.Keys, &tenantv1.APIKeyRecord{
+			Id: key.ID, EnvironmentId: key.EnvironmentID, KeyClass: key.KeyClass,
+			Prefix: key.Prefix, Status: key.Status, CreatedAt: key.CreatedAt,
+		})
+	}
+	return response, nil
+}
+
+func (s *Server) RevokeAPIKey(ctx context.Context, req *tenantv1.RevokeAPIKeyRequest) (*tenantv1.RevokeAPIKeyResponse, error) {
+	if err := s.store.RevokeAPIKey(ctx, req.GetAccountId(), req.GetKeyId()); err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	return &tenantv1.RevokeAPIKeyResponse{Revoked: true}, nil
 }
 
 func (s *Server) ResolveAPIKey(ctx context.Context, req *tenantv1.ResolveAPIKeyRequest) (*tenantv1.ResolveAPIKeyResponse, error) {

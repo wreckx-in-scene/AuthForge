@@ -180,9 +180,60 @@
                   <span>ENVIRONMENT<strong id="summary-environment"></strong></span>
                 </div>
                 <div id="copy-notice" class="copy-notice" role="status" hidden></div>
-                <button id="new-workspace" class="text-button" type="button">Create another workspace</button>
+                <button id="new-workspace" class="text-button" type="button">Go to workspace dashboard</button>
               </section>
             </div>
+          </div>
+        </section>
+
+        <section id="workspace-view" class="workspace-view" hidden>
+          <div class="workspace-heading">
+            <div>
+              <span class="eyebrow eyebrow-dark">YOUR ACCOUNT</span>
+              <h2>Manage your workspaces.</h2>
+              <p>Browse projects and environments, and manage active API keys.</p>
+            </div>
+            <div class="workspace-actions">
+              <button id="refresh-workspaces" class="button button-secondary button-small" type="button">Refresh</button>
+              <button id="add-organization" class="button button-primary button-small" type="button">New organization</button>
+            </div>
+          </div>
+          <div id="workspace-notice" class="notice" role="alert" hidden></div>
+          <div class="resource-layout">
+            <section class="resource-card">
+              <div class="resource-card-heading">
+                <span class="card-kicker">ORGANIZATIONS</span>
+              </div>
+              <div id="organization-list" class="resource-list"></div>
+            </section>
+            <section class="resource-card">
+              <div class="resource-card-heading">
+                <span class="card-kicker">PROJECTS</span>
+                <button id="add-project" class="text-button" type="button" disabled>+ Add</button>
+              </div>
+              <div id="project-list" class="resource-list"><p class="resource-empty">Choose an organization.</p></div>
+            </section>
+            <section class="resource-card resource-card-wide">
+              <div class="resource-card-heading">
+                <span class="card-kicker">ENVIRONMENTS</span>
+                <button id="add-environment" class="text-button" type="button" disabled>+ Add</button>
+              </div>
+              <div id="environment-list" class="resource-list"><p class="resource-empty">Choose a project.</p></div>
+            </section>
+            <section class="resource-card resource-card-wide">
+              <div class="resource-card-heading">
+                <span class="card-kicker">API KEYS</span>
+                <button id="issue-key" class="text-button" type="button" disabled>+ Issue publishable key</button>
+              </div>
+              <div id="new-key-notice" class="new-key-notice" hidden>
+                <span><strong>Copy this key now.</strong> It won’t be shown again.</span>
+                <div class="key-display">
+                  <code id="new-key-value"></code>
+                  <button id="copy-new-key" class="button button-secondary button-small" type="button">Copy</button>
+                </div>
+              </div>
+              <div id="key-list" class="resource-list"><p class="resource-empty">Choose an environment.</p></div>
+            </section>
           </div>
         </section>
         <footer class="main-footer"><span>AuthForge Console</span><span>Secure identity infrastructure</span></footer>
