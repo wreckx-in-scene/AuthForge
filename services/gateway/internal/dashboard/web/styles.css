@@ -75,8 +75,10 @@ button { cursor: pointer; }
 .form-stack { display: grid; gap: 18px; padding-top: 21px; }
 .field { display: grid; gap: 8px; color: #333d54; font-size: 11px; font-weight: 600; }
 .field input, .field select { width: 100%; min-height: 43px; padding: 0 12px; border: 1px solid #dfe3eb; border-radius: 7px; outline: 0; color: var(--ink); background: #fff; font-size: 12px; font-weight: 400; transition: border-color .15s, box-shadow .15s; }
+.field textarea { width: 100%; min-height: 76px; padding: 10px 12px; border: 1px solid #dfe3eb; border-radius: 7px; outline: 0; color: var(--ink); background: #fff; font-family: inherit; font-size: 12px; line-height: 1.5; resize: vertical; transition: border-color .15s, box-shadow .15s; }
 .field input::placeholder { color: #aeb5c2; }
-.field input:focus, .field select:focus { border-color: #8c81e4; box-shadow: 0 0 0 3px rgba(105,89,217,.1); }
+.field textarea::placeholder { color: #aeb5c2; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: #8c81e4; box-shadow: 0 0 0 3px rgba(105,89,217,.1); }
 .field-hint { color: #929bad; font-size: 10px; font-weight: 400; line-height: 1.5; }
 .button { display: inline-flex; min-height: 43px; align-items: center; justify-content: center; gap: 10px; padding: 0 16px; border: 1px solid transparent; border-radius: 7px; font-size: 11px; font-weight: 600; transition: background .15s, transform .15s, box-shadow .15s; }
 .button:focus-visible, .mode-tab:focus-visible, .text-button:focus-visible { outline: 3px solid rgba(105,89,217,.25); outline-offset: 2px; }
@@ -91,6 +93,12 @@ button { cursor: pointer; }
 .button-small { min-height: 32px; padding: 0 11px; font-size: 10px; }
 .auth-footnote { margin: 17px 0 0; color: #9aa2b1; font-size: 10px; line-height: 1.6; text-align: center; }
 .notice { margin: 18px 0 0; padding: 11px 12px; border: 1px solid #f2d5d5; border-radius: 7px; color: #a33b42; background: #fff6f6; font-size: 11px; line-height: 1.5; }
+.notice-success { border-color: #ccece0; color: #258960; background: #effaf5; }
+.auth-link { margin: 15px 0 0; }
+.reset-sign-in { display: inline-block; margin-top: 16px; text-decoration: none; }
+.reset-sign-in:focus-visible { outline: 3px solid rgba(105,89,217,.25); outline-offset: 3px; }
+.auth-footnote a { color: var(--purple); font-weight: 600; text-decoration: none; }
+.auth-footnote a:hover { text-decoration: underline; }
 .setup-view { width: min(100%, 850px); margin: auto; padding: 39px 0 48px; }
 .setup-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 27px; }
 .setup-heading h2 { font-size: clamp(25px, 2.7vw, 32px); }
@@ -141,6 +149,7 @@ button { cursor: pointer; }
 .resource-card-wide { grid-column: span 2; }
 .resource-card-heading { display: flex; min-height: 22px; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 9px; border-bottom: 1px solid #eef0f4; }
 .resource-list { display: grid; gap: 6px; padding-top: 8px; }
+.client-form { display: grid; gap: 10px; padding-top: 12px; }
 .resource-empty { margin: 5px 0; color: #a0a7b5; font-size: 10px; }
 .resource-option { display: flex; width: 100%; min-width: 0; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border: 1px solid transparent; border-radius: 7px; color: #536078; background: transparent; text-align: left; transition: .15s ease; }
 .resource-option:hover { background: #f8f7ff; }
@@ -159,6 +168,17 @@ button { cursor: pointer; }
 .new-key-notice { display: grid; gap: 8px; margin-top: 10px; padding: 11px; border: 1px solid #e5e1ff; border-radius: 8px; color: #69628e; background: #faf9ff; font-size: 9px; }
 .new-key-notice strong { color: #40358b; }
 .new-key-notice .key-display { padding: 6px; }
+.demo-view { width: min(100%, 980px); margin: auto; padding: 39px 0 48px; }
+.demo-card { display: grid; gap: 20px; padding: 23px; }
+.demo-card > .field { max-width: 520px; }
+.demo-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.demo-columns .form-stack { align-content: start; gap: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 9px; }
+.demo-columns h3, .demo-session h3 { margin: 0; font-size: 13px; }
+.demo-session { display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+.demo-session-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.demo-output { overflow: auto; max-height: 220px; margin: 0; padding: 14px; border-radius: 8px; color: #e5e7ee; background: #17213a; font: 11px/1.6 "SFMono-Regular", Consolas, monospace; }
+.demo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.demo-view > .auth-footnote code { color: #51488e; }
 .main-footer { display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding: 20px 0; border-top: 1px solid var(--line); color: #a0a7b5; font-size: 9px; }
 
 @media (max-width: 900px) {
@@ -185,6 +205,9 @@ button { cursor: pointer; }
   .auth-view { padding: 49px 0 36px; }
   .setup-view { padding: 31px 0 36px; }
   .workspace-view { padding: 29px 0 34px; }
+  .demo-view { padding: 29px 0 34px; }
+  .demo-card { padding: 18px; }
+  .demo-columns { grid-template-columns: 1fr; gap: 12px; }
   .workspace-heading { align-items: start; flex-direction: column; }
   .resource-layout { grid-template-columns: 1fr; }
   .resource-card-wide { grid-column: span 1; }

@@ -18,6 +18,10 @@ service TenantService {
   rpc IssueAPIKey(IssueAPIKeyRequest) returns (IssueAPIKeyResponse);
   rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse);
   rpc RevokeAPIKey(RevokeAPIKeyRequest) returns (RevokeAPIKeyResponse);
+  rpc CreateOAuthClient(CreateOAuthClientRequest) returns (CreateOAuthClientResponse);
+  rpc ListOAuthClients(ListOAuthClientsRequest) returns (ListOAuthClientsResponse);
+  rpc DeleteOAuthClient(DeleteOAuthClientRequest) returns (DeleteOAuthClientResponse);
+  rpc ResolveOAuthClient(ResolveOAuthClientRequest) returns (ResolveOAuthClientResponse);
   rpc ResolveAPIKey(ResolveAPIKeyRequest) returns (ResolveAPIKeyResponse);
 }
 
@@ -191,6 +195,51 @@ message RevokeAPIKeyRequest {
 
 message RevokeAPIKeyResponse {
   bool revoked = 1;
+}
+
+message CreateOAuthClientRequest {
+  string account_id = 1;
+  string environment_id = 2;
+  string name = 3;
+  repeated string redirect_uris = 4;
+}
+
+message OAuthClient {
+  string client_id = 1;
+  string environment_id = 2;
+  string project_id = 3;
+  string name = 4;
+  repeated string redirect_uris = 5;
+}
+
+message CreateOAuthClientResponse {
+  OAuthClient client = 1;
+}
+
+message ListOAuthClientsRequest {
+  string account_id = 1;
+  string environment_id = 2;
+}
+
+message ListOAuthClientsResponse {
+  repeated OAuthClient clients = 1;
+}
+
+message DeleteOAuthClientRequest {
+  string account_id = 1;
+  string client_id = 2;
+}
+
+message DeleteOAuthClientResponse {
+  bool deleted = 1;
+}
+
+message ResolveOAuthClientRequest {
+  string client_id = 1;
+}
+
+message ResolveOAuthClientResponse {
+  OAuthClient client = 1;
 }
 
 message ResolveAPIKeyRequest {

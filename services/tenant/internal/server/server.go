@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
+	"net/url"
 	"strings"
 	"time"
 
@@ -293,6 +295,53 @@ func (s *Server) RevokeAPIKey(ctx context.Context, req *tenantv1.RevokeAPIKeyReq
 	return &tenantv1.RevokeAPIKeyResponse{Revoked: true}, nil
 }
 
+func (s *Server) CreateOAuthClient(ctx context.Context, req *tenantv1.CreateOAuthClientRequest) (*tenantv1.CreateOAuthClientResponse, error) {
+	name, err := personName(req.GetName())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid_argument")
+	}
+	redirectURIs, err := normalizeRedirectURIs(req.GetRedirectUris())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid_redirect_uri")
+	}
+	client, err := s.store.CreateOAuthClient(
+		ctx, req.GetAccountId(), req.GetEnvironmentId(), name, redirectURIs,
+	)
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	return &tenantv1.CreateOAuthClientResponse{Client: oauthClientProto(client)}, nil
+}
+
+func (s *Server) ListOAuthClients(ctx context.Context, req *tenantv1.ListOAuthClientsRequest) (*tenantv1.ListOAuthClientsResponse, error) {
+	clients, err := s.store.ListOAuthClients(ctx, req.GetAccountId(), req.GetEnvironmentId())
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	response := &tenantv1.ListOAuthClientsResponse{
+		Clients: make([]*tenantv1.OAuthClient, 0, len(clients)),
+	}
+	for _, client := range clients {
+		response.Clients = append(response.Clients, oauthClientProto(client))
+	}
+	return response, nil
+}
+
+func (s *Server) DeleteOAuthClient(ctx context.Context, req *tenantv1.DeleteOAuthClientRequest) (*tenantv1.DeleteOAuthClientResponse, error) {
+	if err := s.store.DeleteOAuthClient(ctx, req.GetAccountId(), req.GetClientId()); err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	return &tenantv1.DeleteOAuthClientResponse{Deleted: true}, nil
+}
+
+func (s *Server) ResolveOAuthClient(ctx context.Context, req *tenantv1.ResolveOAuthClientRequest) (*tenantv1.ResolveOAuthClientResponse, error) {
+	client, err := s.store.ResolveOAuthClient(ctx, req.GetClientId())
+	if err != nil {
+		return nil, statusx.Fail(s.log, err, "")
+	}
+	return &tenantv1.ResolveOAuthClientResponse{Client: oauthClientProto(client)}, nil
+}
+
 func (s *Server) ResolveAPIKey(ctx context.Context, req *tenantv1.ResolveAPIKeyRequest) (*tenantv1.ResolveAPIKeyResponse, error) {
 	if req.GetKey() == "" {
 		return nil, status.Error(codes.NotFound, "not_found")
@@ -317,6 +366,52 @@ func (s *Server) consoleToken(accountID string) (string, time.Time, error) {
 
 func toAccount(account store.Account) *tenantv1.Account {
 	return &tenantv1.Account{Id: account.ID, Email: account.Email, Name: account.Name}
+}
+
+func oauthClientProto(client store.OAuthClient) *tenantv1.OAuthClient {
+	return &tenantv1.OAuthClient{
+		ClientId: client.ClientID, EnvironmentId: client.EnvironmentID,
+		ProjectId: client.ProjectID, Name: client.Name, RedirectUris: client.RedirectURIs,
+	}
+}
+
+func normalizeRedirectURIs(raw []string) ([]string, error) {
+	if len(raw) == 0 || len(raw) > 10 {
+		return nil, errs.ErrInvalid
+	}
+	seen := make(map[string]struct{}, len(raw))
+	uris := make([]string, 0, len(raw))
+	for _, value := range raw {
+		value = strings.TrimSpace(value)
+		if value == "" || len(value) > 2048 || strings.ContainsAny(value, " \r\n\t") {
+			return nil, errs.ErrInvalid
+		}
+		parsed, err := url.Parse(value)
+		if err != nil || parsed.Scheme == "" || parsed.Host == "" ||
+			parsed.Hostname() == "" || parsed.User != nil || parsed.Fragment != "" || parsed.Opaque != "" {
+			return nil, errs.ErrInvalid
+		}
+		if parsed.Scheme != "https" && !(parsed.Scheme == "http" && isLoopbackHost(parsed.Hostname())) {
+			return nil, errs.ErrInvalid
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		uris = append(uris, value)
+	}
+	if len(uris) == 0 {
+		return nil, errs.ErrInvalid
+	}
+	return uris, nil
+}
+
+func isLoopbackHost(host string) bool {
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 func personName(raw string) (string, error) {

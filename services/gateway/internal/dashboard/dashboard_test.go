@@ -15,6 +15,11 @@ func TestHandlerServesDashboardAndAssets(t *testing.T) {
 		contains    string
 	}{
 		{path: "/", contentType: "text/html", contains: "AuthForge Console"},
+		{path: "/reset-password?token=example", contentType: "text/html", contains: "Choose a new password"},
+		{path: "/verify-email?environment_id=example&token=example", contentType: "text/html", contains: "Verify your email"},
+		{path: "/demo", contentType: "text/html", contains: "Try AuthForge in your browser."},
+		{path: "/authorize", contentType: "text/html", contains: "Sign in to your application"},
+		{path: "/", contentType: "text/html", contains: "Allowed callback URLs"},
 		{path: "/assets/app.js", contentType: "text/javascript", contains: "/v1/console/signup"},
 		{path: "/assets/app.js", contentType: "text/javascript", contains: "/v1/environments/${encodeURIComponent(environmentID)}/api-keys"},
 		{path: "/assets/styles.css", contentType: "text/css", contains: ".auth-layout"},

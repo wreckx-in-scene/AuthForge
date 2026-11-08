@@ -59,6 +59,14 @@ type APIKey struct {
 	CreatedAt     int64
 }
 
+type OAuthClient struct {
+	ClientID      string
+	EnvironmentID string
+	ProjectID     string
+	Name          string
+	RedirectURIs  []string
+}
+
 type ResolvedKey struct {
 	KeyID           string
 	OrganizationID  string
@@ -594,6 +602,157 @@ func (s *Store) RevokeAPIKey(ctx context.Context, accountID, keyID string) error
 		return err
 	}
 	return tx.Commit(ctx)
+}
+
+func (s *Store) CreateOAuthClient(ctx context.Context, accountID, environmentID, name string, redirectURIs []string) (OAuthClient, error) {
+	if err := id.Parse(accountID, environmentID); err != nil {
+		return OAuthClient{}, err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return OAuthClient{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var projectID, organizationID string
+	err = tx.QueryRow(ctx, `
+		SELECT project_id::text, organization_id::text
+		FROM tenant.environments
+		WHERE id = $1
+	`, environmentID).Scan(&projectID, &organizationID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return OAuthClient{}, errs.ErrNotFound
+	}
+	if err != nil {
+		return OAuthClient{}, err
+	}
+	if err := requireMember(ctx, tx, organizationID, accountID); err != nil {
+		return OAuthClient{}, err
+	}
+
+	client := OAuthClient{
+		ClientID: uuid.NewString(), EnvironmentID: environmentID, ProjectID: projectID,
+		Name: name, RedirectURIs: redirectURIs,
+	}
+	err = tx.QueryRow(ctx, `
+		INSERT INTO tenant.oauth_clients (
+			id, environment_id, project_id, organization_id, name, redirect_uris
+		)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id::text
+	`, client.ClientID, environmentID, projectID, organizationID, name, redirectURIs).Scan(&client.ClientID)
+	if err != nil {
+		return OAuthClient{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return OAuthClient{}, err
+	}
+	return client, nil
+}
+
+func (s *Store) ListOAuthClients(ctx context.Context, accountID, environmentID string) ([]OAuthClient, error) {
+	if err := id.Parse(accountID, environmentID); err != nil {
+		return nil, err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	var organizationID string
+	err = tx.QueryRow(ctx, `
+		SELECT organization_id::text FROM tenant.environments WHERE id = $1
+	`, environmentID).Scan(&organizationID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, errs.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := requireMember(ctx, tx, organizationID, accountID); err != nil {
+		return nil, err
+	}
+
+	rows, err := tx.Query(ctx, `
+		SELECT id::text, environment_id::text, project_id::text, name, redirect_uris
+		FROM tenant.oauth_clients
+		WHERE environment_id = $1 AND status = 'active'
+		ORDER BY created_at, id
+	`, environmentID)
+	if err != nil {
+		return nil, err
+	}
+	clients := make([]OAuthClient, 0)
+	for rows.Next() {
+		var client OAuthClient
+		if err := rows.Scan(
+			&client.ClientID, &client.EnvironmentID, &client.ProjectID, &client.Name, &client.RedirectURIs,
+		); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		clients = append(clients, client)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close()
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return clients, nil
+}
+
+func (s *Store) DeleteOAuthClient(ctx context.Context, accountID, clientID string) error {
+	if err := id.Parse(accountID, clientID); err != nil {
+		return err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var organizationID string
+	err = tx.QueryRow(ctx, `
+		SELECT organization_id::text FROM tenant.oauth_clients WHERE id = $1
+	`, clientID).Scan(&organizationID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return errs.ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if err := requireMember(ctx, tx, organizationID, accountID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE tenant.oauth_clients SET status = 'disabled' WHERE id = $1`, clientID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func (s *Store) ResolveOAuthClient(ctx context.Context, clientID string) (OAuthClient, error) {
+	if err := id.Parse(clientID); err != nil {
+		return OAuthClient{}, err
+	}
+	var client OAuthClient
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, environment_id::text, project_id::text, name, redirect_uris
+		FROM tenant.oauth_clients
+		WHERE id = $1 AND status = 'active'
+	`, clientID).Scan(
+		&client.ClientID, &client.EnvironmentID, &client.ProjectID, &client.Name, &client.RedirectURIs,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return OAuthClient{}, errs.ErrNotFound
+	}
+	if err != nil {
+		return OAuthClient{}, err
+	}
+	return client, nil
 }
 
 func (s *Store) ResolveAPIKey(ctx context.Context, keyHash []byte) (ResolvedKey, error) {

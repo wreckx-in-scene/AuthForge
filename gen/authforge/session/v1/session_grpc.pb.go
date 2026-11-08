@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SessionService_CreateSession_FullMethodName      = "/authforge.session.v1.SessionService/CreateSession"
-	SessionService_RotateRefreshToken_FullMethodName = "/authforge.session.v1.SessionService/RotateRefreshToken"
-	SessionService_RevokeSession_FullMethodName      = "/authforge.session.v1.SessionService/RevokeSession"
+	SessionService_CreateSession_FullMethodName             = "/authforge.session.v1.SessionService/CreateSession"
+	SessionService_RotateRefreshToken_FullMethodName        = "/authforge.session.v1.SessionService/RotateRefreshToken"
+	SessionService_RevokeSession_FullMethodName             = "/authforge.session.v1.SessionService/RevokeSession"
+	SessionService_IssueAuthorizationCode_FullMethodName    = "/authforge.session.v1.SessionService/IssueAuthorizationCode"
+	SessionService_ExchangeAuthorizationCode_FullMethodName = "/authforge.session.v1.SessionService/ExchangeAuthorizationCode"
 )
 
 // SessionServiceClient is the client API for SessionService service.
@@ -31,6 +33,8 @@ type SessionServiceClient interface {
 	CreateSession(ctx context.Context, in *CreateSessionRequest, opts ...grpc.CallOption) (*CreateSessionResponse, error)
 	RotateRefreshToken(ctx context.Context, in *RotateRefreshTokenRequest, opts ...grpc.CallOption) (*RotateRefreshTokenResponse, error)
 	RevokeSession(ctx context.Context, in *RevokeSessionRequest, opts ...grpc.CallOption) (*RevokeSessionResponse, error)
+	IssueAuthorizationCode(ctx context.Context, in *IssueAuthorizationCodeRequest, opts ...grpc.CallOption) (*IssueAuthorizationCodeResponse, error)
+	ExchangeAuthorizationCode(ctx context.Context, in *ExchangeAuthorizationCodeRequest, opts ...grpc.CallOption) (*ExchangeAuthorizationCodeResponse, error)
 }
 
 type sessionServiceClient struct {
@@ -71,6 +75,26 @@ func (c *sessionServiceClient) RevokeSession(ctx context.Context, in *RevokeSess
 	return out, nil
 }
 
+func (c *sessionServiceClient) IssueAuthorizationCode(ctx context.Context, in *IssueAuthorizationCodeRequest, opts ...grpc.CallOption) (*IssueAuthorizationCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IssueAuthorizationCodeResponse)
+	err := c.cc.Invoke(ctx, SessionService_IssueAuthorizationCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sessionServiceClient) ExchangeAuthorizationCode(ctx context.Context, in *ExchangeAuthorizationCodeRequest, opts ...grpc.CallOption) (*ExchangeAuthorizationCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExchangeAuthorizationCodeResponse)
+	err := c.cc.Invoke(ctx, SessionService_ExchangeAuthorizationCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SessionServiceServer is the server API for SessionService service.
 // All implementations must embed UnimplementedSessionServiceServer
 // for forward compatibility.
@@ -78,6 +102,8 @@ type SessionServiceServer interface {
 	CreateSession(context.Context, *CreateSessionRequest) (*CreateSessionResponse, error)
 	RotateRefreshToken(context.Context, *RotateRefreshTokenRequest) (*RotateRefreshTokenResponse, error)
 	RevokeSession(context.Context, *RevokeSessionRequest) (*RevokeSessionResponse, error)
+	IssueAuthorizationCode(context.Context, *IssueAuthorizationCodeRequest) (*IssueAuthorizationCodeResponse, error)
+	ExchangeAuthorizationCode(context.Context, *ExchangeAuthorizationCodeRequest) (*ExchangeAuthorizationCodeResponse, error)
 	mustEmbedUnimplementedSessionServiceServer()
 }
 
@@ -96,6 +122,12 @@ func (UnimplementedSessionServiceServer) RotateRefreshToken(context.Context, *Ro
 }
 func (UnimplementedSessionServiceServer) RevokeSession(context.Context, *RevokeSessionRequest) (*RevokeSessionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RevokeSession not implemented")
+}
+func (UnimplementedSessionServiceServer) IssueAuthorizationCode(context.Context, *IssueAuthorizationCodeRequest) (*IssueAuthorizationCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IssueAuthorizationCode not implemented")
+}
+func (UnimplementedSessionServiceServer) ExchangeAuthorizationCode(context.Context, *ExchangeAuthorizationCodeRequest) (*ExchangeAuthorizationCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExchangeAuthorizationCode not implemented")
 }
 func (UnimplementedSessionServiceServer) mustEmbedUnimplementedSessionServiceServer() {}
 func (UnimplementedSessionServiceServer) testEmbeddedByValue()                        {}
@@ -172,6 +204,42 @@ func _SessionService_RevokeSession_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SessionService_IssueAuthorizationCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IssueAuthorizationCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionServiceServer).IssueAuthorizationCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SessionService_IssueAuthorizationCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionServiceServer).IssueAuthorizationCode(ctx, req.(*IssueAuthorizationCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SessionService_ExchangeAuthorizationCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExchangeAuthorizationCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionServiceServer).ExchangeAuthorizationCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SessionService_ExchangeAuthorizationCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionServiceServer).ExchangeAuthorizationCode(ctx, req.(*ExchangeAuthorizationCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SessionService_ServiceDesc is the grpc.ServiceDesc for SessionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +258,14 @@ var SessionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RevokeSession",
 			Handler:    _SessionService_RevokeSession_Handler,
+		},
+		{
+			MethodName: "IssueAuthorizationCode",
+			Handler:    _SessionService_IssueAuthorizationCode_Handler,
+		},
+		{
+			MethodName: "ExchangeAuthorizationCode",
+			Handler:    _SessionService_ExchangeAuthorizationCode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

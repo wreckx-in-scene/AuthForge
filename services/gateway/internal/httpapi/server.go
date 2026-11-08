@@ -65,6 +65,12 @@ func (s *Server) Handler() http.Handler {
 		_, _ = w.Write([]byte("ok"))
 	})
 	mux.Handle("GET /{$}", dashboard.Handler())
+	mux.Handle("GET /reset-password", dashboard.Handler())
+	mux.Handle("GET /verify-email", dashboard.Handler())
+	mux.Handle("GET /demo", dashboard.Handler())
+	mux.HandleFunc("GET /authorize", s.authorizePage)
+	mux.HandleFunc("GET /.well-known/openid-configuration", s.openIDConfiguration)
+	mux.HandleFunc("GET /.well-known/jwks.json", s.openIDKeys)
 	mux.Handle("GET /assets/", dashboard.Handler())
 	mux.HandleFunc("POST /v1/console/signup", s.consoleSignup)
 	mux.HandleFunc("POST /v1/console/login", s.consoleLogin)
@@ -79,6 +85,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/api-keys", s.issueAPIKey)
 	mux.HandleFunc("GET /v1/environments/{environmentID}/api-keys", s.listAPIKeys)
 	mux.HandleFunc("DELETE /v1/api-keys/{keyID}", s.revokeAPIKey)
+	mux.HandleFunc("POST /v1/oauth-clients", s.createOAuthClient)
+	mux.HandleFunc("GET /v1/environments/{environmentID}/oauth-clients", s.listOAuthClients)
+	mux.HandleFunc("DELETE /v1/oauth-clients/{clientID}", s.deleteOAuthClient)
+	mux.HandleFunc("POST /v1/authorize", s.authorizeUser)
+	mux.HandleFunc("POST /v1/token", s.tokenEndpoint)
 	mux.HandleFunc("POST /v1/signup", s.signup)
 	mux.HandleFunc("POST /v1/login", s.login)
 	mux.HandleFunc("POST /v1/oauth/google/nonce", s.googleNonce)
@@ -400,6 +411,78 @@ func (s *Server) revokeAPIKey(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]bool{"revoked": resp.GetRevoked()})
 }
 
+func (s *Server) createOAuthClient(w http.ResponseWriter, r *http.Request) {
+	accountID, ok := s.consoleAccount(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		EnvironmentID string   `json:"environment_id"`
+		Name          string   `json:"name"`
+		RedirectURIs  []string `json:"redirect_uris"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.CreateOAuthClient(ctx, &tenantv1.CreateOAuthClientRequest{
+		AccountId: accountID, EnvironmentId: body.EnvironmentID,
+		Name: body.Name, RedirectUris: body.RedirectURIs,
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, oauthClientJSON(resp.GetClient()))
+}
+
+func (s *Server) listOAuthClients(w http.ResponseWriter, r *http.Request) {
+	accountID, ok := s.consoleAccount(w, r)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.ListOAuthClients(ctx, &tenantv1.ListOAuthClientsRequest{
+		AccountId: accountID, EnvironmentId: r.PathValue("environmentID"),
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	clients := make([]map[string]any, 0, len(resp.GetClients()))
+	for _, client := range resp.GetClients() {
+		clients = append(clients, oauthClientJSON(client))
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"clients": clients})
+}
+
+func (s *Server) deleteOAuthClient(w http.ResponseWriter, r *http.Request) {
+	accountID, ok := s.consoleAccount(w, r)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resp, err := s.tenant.DeleteOAuthClient(ctx, &tenantv1.DeleteOAuthClientRequest{
+		AccountId: accountID, ClientId: r.PathValue("clientID"),
+	})
+	if err != nil {
+		writeStatus(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"deleted": resp.GetDeleted()})
+}
+
+func oauthClientJSON(client *tenantv1.OAuthClient) map[string]any {
+	return map[string]any{
+		"client_id": client.GetClientId(), "environment_id": client.GetEnvironmentId(),
+		"project_id": client.GetProjectId(), "name": client.GetName(),
+		"redirect_uris": client.GetRedirectUris(),
+	}
+}
+
 func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 	s.passwordAuth(w, r, true)
 }
@@ -713,7 +796,7 @@ func writeStatus(w http.ResponseWriter, err error) {
 
 func publicMessage(msg string) bool {
 	switch msg {
-	case "invalid_argument", "invalid_credentials", "invalid_api_key", "email_already_registered", "slug_taken", "forbidden", "not_found", "account_disabled", "refresh_reuse_detected", "unauthenticated", "invalid_reset_token", "invalid_verification_token", "invalid_google_credential", "google_identity_conflict", "google_sign_in_unavailable", "internal", "already_exists":
+	case "invalid_argument", "invalid_redirect_uri", "invalid_credentials", "invalid_api_key", "email_already_registered", "slug_taken", "forbidden", "not_found", "account_disabled", "refresh_reuse_detected", "unauthenticated", "invalid_reset_token", "invalid_verification_token", "invalid_google_credential", "google_identity_conflict", "google_sign_in_unavailable", "internal", "already_exists":
 		return true
 	default:
 		return false

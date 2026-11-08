@@ -397,6 +397,310 @@ func (x *RevokeSessionResponse) GetSessionId() string {
 	return ""
 }
 
+type IssueAuthorizationCodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EnvironmentId string                 `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ClientId      string                 `protobuf:"bytes,4,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	RedirectUri   string                 `protobuf:"bytes,5,opt,name=redirect_uri,json=redirectUri,proto3" json:"redirect_uri,omitempty"`
+	CodeChallenge string                 `protobuf:"bytes,6,opt,name=code_challenge,json=codeChallenge,proto3" json:"code_challenge,omitempty"`
+	Nonce         string                 `protobuf:"bytes,7,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IssueAuthorizationCodeRequest) Reset() {
+	*x = IssueAuthorizationCodeRequest{}
+	mi := &file_authforge_session_v1_session_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IssueAuthorizationCodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IssueAuthorizationCodeRequest) ProtoMessage() {}
+
+func (x *IssueAuthorizationCodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_session_v1_session_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IssueAuthorizationCodeRequest.ProtoReflect.Descriptor instead.
+func (*IssueAuthorizationCodeRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_session_v1_session_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *IssueAuthorizationCodeRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *IssueAuthorizationCodeRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *IssueAuthorizationCodeRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *IssueAuthorizationCodeRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *IssueAuthorizationCodeRequest) GetRedirectUri() string {
+	if x != nil {
+		return x.RedirectUri
+	}
+	return ""
+}
+
+func (x *IssueAuthorizationCodeRequest) GetCodeChallenge() string {
+	if x != nil {
+		return x.CodeChallenge
+	}
+	return ""
+}
+
+func (x *IssueAuthorizationCodeRequest) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+type IssueAuthorizationCodeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IssueAuthorizationCodeResponse) Reset() {
+	*x = IssueAuthorizationCodeResponse{}
+	mi := &file_authforge_session_v1_session_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IssueAuthorizationCodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IssueAuthorizationCodeResponse) ProtoMessage() {}
+
+func (x *IssueAuthorizationCodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_session_v1_session_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IssueAuthorizationCodeResponse.ProtoReflect.Descriptor instead.
+func (*IssueAuthorizationCodeResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_session_v1_session_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *IssueAuthorizationCodeResponse) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *IssueAuthorizationCodeResponse) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return 0
+}
+
+type ExchangeAuthorizationCodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	ClientId      string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	RedirectUri   string                 `protobuf:"bytes,3,opt,name=redirect_uri,json=redirectUri,proto3" json:"redirect_uri,omitempty"`
+	CodeVerifier  string                 `protobuf:"bytes,4,opt,name=code_verifier,json=codeVerifier,proto3" json:"code_verifier,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExchangeAuthorizationCodeRequest) Reset() {
+	*x = ExchangeAuthorizationCodeRequest{}
+	mi := &file_authforge_session_v1_session_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExchangeAuthorizationCodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExchangeAuthorizationCodeRequest) ProtoMessage() {}
+
+func (x *ExchangeAuthorizationCodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_session_v1_session_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExchangeAuthorizationCodeRequest.ProtoReflect.Descriptor instead.
+func (*ExchangeAuthorizationCodeRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_session_v1_session_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ExchangeAuthorizationCodeRequest) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *ExchangeAuthorizationCodeRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *ExchangeAuthorizationCodeRequest) GetRedirectUri() string {
+	if x != nil {
+		return x.RedirectUri
+	}
+	return ""
+}
+
+func (x *ExchangeAuthorizationCodeRequest) GetCodeVerifier() string {
+	if x != nil {
+		return x.CodeVerifier
+	}
+	return ""
+}
+
+type ExchangeAuthorizationCodeResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	SessionId        string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	EnvironmentId    string                 `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	ProjectId        string                 `protobuf:"bytes,3,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	UserId           string                 `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	RefreshToken     string                 `protobuf:"bytes,5,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	RefreshExpiresAt int64                  `protobuf:"varint,6,opt,name=refresh_expires_at,json=refreshExpiresAt,proto3" json:"refresh_expires_at,omitempty"`
+	Nonce            string                 `protobuf:"bytes,7,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ExchangeAuthorizationCodeResponse) Reset() {
+	*x = ExchangeAuthorizationCodeResponse{}
+	mi := &file_authforge_session_v1_session_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExchangeAuthorizationCodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExchangeAuthorizationCodeResponse) ProtoMessage() {}
+
+func (x *ExchangeAuthorizationCodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_session_v1_session_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExchangeAuthorizationCodeResponse.ProtoReflect.Descriptor instead.
+func (*ExchangeAuthorizationCodeResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_session_v1_session_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ExchangeAuthorizationCodeResponse) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *ExchangeAuthorizationCodeResponse) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *ExchangeAuthorizationCodeResponse) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *ExchangeAuthorizationCodeResponse) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ExchangeAuthorizationCodeResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *ExchangeAuthorizationCodeResponse) GetRefreshExpiresAt() int64 {
+	if x != nil {
+		return x.RefreshExpiresAt
+	}
+	return 0
+}
+
+func (x *ExchangeAuthorizationCodeResponse) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
 var File_authforge_session_v1_session_proto protoreflect.FileDescriptor
 
 const file_authforge_session_v1_session_proto_rawDesc = "" +
@@ -434,11 +738,41 @@ const file_authforge_session_v1_session_proto_rawDesc = "" +
 	"\x0eenvironment_id\x18\x03 \x01(\tR\renvironmentId\"6\n" +
 	"\x15RevokeSessionResponse\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x01 \x01(\tR\tsessionId2\xdd\x02\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"\xfb\x01\n" +
+	"\x1dIssueAuthorizationCodeRequest\x12%\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tR\renvironmentId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x1b\n" +
+	"\tclient_id\x18\x04 \x01(\tR\bclientId\x12!\n" +
+	"\fredirect_uri\x18\x05 \x01(\tR\vredirectUri\x12%\n" +
+	"\x0ecode_challenge\x18\x06 \x01(\tR\rcodeChallenge\x12\x14\n" +
+	"\x05nonce\x18\a \x01(\tR\x05nonce\"S\n" +
+	"\x1eIssueAuthorizationCodeResponse\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x1d\n" +
+	"\n" +
+	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"\x9b\x01\n" +
+	" ExchangeAuthorizationCodeRequest\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x1b\n" +
+	"\tclient_id\x18\x02 \x01(\tR\bclientId\x12!\n" +
+	"\fredirect_uri\x18\x03 \x01(\tR\vredirectUri\x12#\n" +
+	"\rcode_verifier\x18\x04 \x01(\tR\fcodeVerifier\"\x8a\x02\n" +
+	"!ExchangeAuthorizationCodeResponse\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12%\n" +
+	"\x0eenvironment_id\x18\x02 \x01(\tR\renvironmentId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x03 \x01(\tR\tprojectId\x12\x17\n" +
+	"\auser_id\x18\x04 \x01(\tR\x06userId\x12#\n" +
+	"\rrefresh_token\x18\x05 \x01(\tR\frefreshToken\x12,\n" +
+	"\x12refresh_expires_at\x18\x06 \x01(\x03R\x10refreshExpiresAt\x12\x14\n" +
+	"\x05nonce\x18\a \x01(\tR\x05nonce2\xf2\x04\n" +
 	"\x0eSessionService\x12h\n" +
 	"\rCreateSession\x12*.authforge.session.v1.CreateSessionRequest\x1a+.authforge.session.v1.CreateSessionResponse\x12w\n" +
 	"\x12RotateRefreshToken\x12/.authforge.session.v1.RotateRefreshTokenRequest\x1a0.authforge.session.v1.RotateRefreshTokenResponse\x12h\n" +
-	"\rRevokeSession\x12*.authforge.session.v1.RevokeSessionRequest\x1a+.authforge.session.v1.RevokeSessionResponseBIZGgithub.com/wreckx-in-scene/AuthForge/gen/authforge/session/v1;sessionv1b\x06proto3"
+	"\rRevokeSession\x12*.authforge.session.v1.RevokeSessionRequest\x1a+.authforge.session.v1.RevokeSessionResponse\x12\x83\x01\n" +
+	"\x16IssueAuthorizationCode\x123.authforge.session.v1.IssueAuthorizationCodeRequest\x1a4.authforge.session.v1.IssueAuthorizationCodeResponse\x12\x8c\x01\n" +
+	"\x19ExchangeAuthorizationCode\x126.authforge.session.v1.ExchangeAuthorizationCodeRequest\x1a7.authforge.session.v1.ExchangeAuthorizationCodeResponseBIZGgithub.com/wreckx-in-scene/AuthForge/gen/authforge/session/v1;sessionv1b\x06proto3"
 
 var (
 	file_authforge_session_v1_session_proto_rawDescOnce sync.Once
@@ -452,24 +786,32 @@ func file_authforge_session_v1_session_proto_rawDescGZIP() []byte {
 	return file_authforge_session_v1_session_proto_rawDescData
 }
 
-var file_authforge_session_v1_session_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_authforge_session_v1_session_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_authforge_session_v1_session_proto_goTypes = []any{
-	(*CreateSessionRequest)(nil),       // 0: authforge.session.v1.CreateSessionRequest
-	(*CreateSessionResponse)(nil),      // 1: authforge.session.v1.CreateSessionResponse
-	(*RotateRefreshTokenRequest)(nil),  // 2: authforge.session.v1.RotateRefreshTokenRequest
-	(*RotateRefreshTokenResponse)(nil), // 3: authforge.session.v1.RotateRefreshTokenResponse
-	(*RevokeSessionRequest)(nil),       // 4: authforge.session.v1.RevokeSessionRequest
-	(*RevokeSessionResponse)(nil),      // 5: authforge.session.v1.RevokeSessionResponse
+	(*CreateSessionRequest)(nil),              // 0: authforge.session.v1.CreateSessionRequest
+	(*CreateSessionResponse)(nil),             // 1: authforge.session.v1.CreateSessionResponse
+	(*RotateRefreshTokenRequest)(nil),         // 2: authforge.session.v1.RotateRefreshTokenRequest
+	(*RotateRefreshTokenResponse)(nil),        // 3: authforge.session.v1.RotateRefreshTokenResponse
+	(*RevokeSessionRequest)(nil),              // 4: authforge.session.v1.RevokeSessionRequest
+	(*RevokeSessionResponse)(nil),             // 5: authforge.session.v1.RevokeSessionResponse
+	(*IssueAuthorizationCodeRequest)(nil),     // 6: authforge.session.v1.IssueAuthorizationCodeRequest
+	(*IssueAuthorizationCodeResponse)(nil),    // 7: authforge.session.v1.IssueAuthorizationCodeResponse
+	(*ExchangeAuthorizationCodeRequest)(nil),  // 8: authforge.session.v1.ExchangeAuthorizationCodeRequest
+	(*ExchangeAuthorizationCodeResponse)(nil), // 9: authforge.session.v1.ExchangeAuthorizationCodeResponse
 }
 var file_authforge_session_v1_session_proto_depIdxs = []int32{
 	0, // 0: authforge.session.v1.SessionService.CreateSession:input_type -> authforge.session.v1.CreateSessionRequest
 	2, // 1: authforge.session.v1.SessionService.RotateRefreshToken:input_type -> authforge.session.v1.RotateRefreshTokenRequest
 	4, // 2: authforge.session.v1.SessionService.RevokeSession:input_type -> authforge.session.v1.RevokeSessionRequest
-	1, // 3: authforge.session.v1.SessionService.CreateSession:output_type -> authforge.session.v1.CreateSessionResponse
-	3, // 4: authforge.session.v1.SessionService.RotateRefreshToken:output_type -> authforge.session.v1.RotateRefreshTokenResponse
-	5, // 5: authforge.session.v1.SessionService.RevokeSession:output_type -> authforge.session.v1.RevokeSessionResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	6, // 3: authforge.session.v1.SessionService.IssueAuthorizationCode:input_type -> authforge.session.v1.IssueAuthorizationCodeRequest
+	8, // 4: authforge.session.v1.SessionService.ExchangeAuthorizationCode:input_type -> authforge.session.v1.ExchangeAuthorizationCodeRequest
+	1, // 5: authforge.session.v1.SessionService.CreateSession:output_type -> authforge.session.v1.CreateSessionResponse
+	3, // 6: authforge.session.v1.SessionService.RotateRefreshToken:output_type -> authforge.session.v1.RotateRefreshTokenResponse
+	5, // 7: authforge.session.v1.SessionService.RevokeSession:output_type -> authforge.session.v1.RevokeSessionResponse
+	7, // 8: authforge.session.v1.SessionService.IssueAuthorizationCode:output_type -> authforge.session.v1.IssueAuthorizationCodeResponse
+	9, // 9: authforge.session.v1.SessionService.ExchangeAuthorizationCode:output_type -> authforge.session.v1.ExchangeAuthorizationCodeResponse
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -486,7 +828,7 @@ func file_authforge_session_v1_session_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_authforge_session_v1_session_proto_rawDesc), len(file_authforge_session_v1_session_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

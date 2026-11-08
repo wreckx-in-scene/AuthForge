@@ -6,7 +6,7 @@ Tokens are returned once. API keys and refresh tokens are not recoverable later.
 
 ## Rate limits
 
-The gateway applies per-source-IP token-bucket limits to authentication endpoints: signup and login have a burst of 10 and refill at 10 per minute; password-reset and verification email requests share a burst of 3 and refill at 3 per 15 minutes; reset and verification confirmations share a burst of 5 and refill at 5 per minute. Requests exceeding a limit return `429` with `{ "error": "rate_limited" }` and a `Retry-After` header. The gateway uses the TCP peer address and does not trust `X-Forwarded-For`.
+The gateway applies per-source-IP token-bucket limits to authentication endpoints: signup, login, and hosted authorization have a burst of 10 and refill at 10 per minute; token exchanges have a burst of 20 per minute; password-reset and verification email requests share a burst of 3 and refill at 3 per 15 minutes; reset and verification confirmations share a burst of 5 and refill at 5 per minute. Requests exceeding a limit return `429` with `{ "error": "rate_limited" }` and a `Retry-After` header. The gateway uses the TCP peer address and does not trust `X-Forwarded-For`.
 
 These limits are in-memory and apply per gateway process. Multi-instance deployments need a shared limiter, and deployments behind a reverse proxy need trusted-proxy client IP handling before the gateway can accurately apply per-client limits.
 
@@ -19,6 +19,7 @@ These limits are in-memory and apply per gateway process. Multi-instance deploym
 ```
 
 Returns `{"status":"ok"}` whether or not the account exists. If it exists, AuthForge emails a single-use link that expires after 30 minutes. The request response never contains the reset token.
+The developer console includes the request form and serves the reset page at `/reset-password`; configure `RESET_PASSWORD_URL` to that HTTPS URL in production.
 
 `POST /v1/password-reset/confirm`
 
@@ -44,7 +45,7 @@ An expired, unknown, or previously used token returns `401` with `invalid_reset_
 
 Both return `access_token`, `expires_at`, and `account`.
 
-The gateway also serves a first-party developer console at `/`. It uses these console endpoints to create an account and initial workspace, then browse and manage the account's organizations, projects, environments, and API keys. The console token is kept in tab-scoped session storage and is cleared by Sign out; signing out in the current API does not revoke the stateless token, which remains valid until its expiry. The console issues publishable keys only and displays each returned key once.
+The gateway also serves a first-party developer console at `/`. It uses these console endpoints to create an account and initial workspace, then browse and manage the account's organizations, projects, environments, API keys, and registered OAuth clients. The console token is kept in tab-scoped session storage and is cleared by Sign out; signing out in the current API does not revoke the stateless token, which remains valid until its expiry. The console issues publishable keys only and displays each returned key once.
 
 `POST /v1/organizations`
 
@@ -85,6 +86,54 @@ All workspace management routes below require the console bearer token and retur
 `GET /v1/environments/{environmentID}/api-keys` returns key metadata in `{ "keys": [...] }`: each item includes `id`, `environment_id`, `key_class`, `prefix`, `status`, and `created_at` (Unix seconds). It never returns key secrets.
 
 `DELETE /v1/api-keys/{keyID}` revokes an account-owned key and returns `{ "revoked": true }`. Revocation is permanent; an already revoked key remains revoked.
+
+OAuth client registration is scoped to an environment and is managed with the console bearer token:
+
+`POST /v1/oauth-clients`
+
+```json
+{
+  "environment_id": "<uuid>",
+  "name": "Campus Connect web",
+  "redirect_uris": ["https://app.example.com/auth/callback", "http://localhost:3000/auth/callback"]
+}
+```
+
+Redirect URIs must be absolute HTTPS URLs, or HTTP URLs on localhost/loopback for development. Fragments and user-info are rejected. The callback list is capped at 10 entries and will be matched exactly by the hosted authorization flow. The response includes a public `client_id`; it is not a secret.
+
+`GET /v1/environments/{environmentID}/oauth-clients` returns active registered clients. `DELETE /v1/oauth-clients/{clientID}` disables a client and returns `{ "deleted": true }`.
+
+Client registration is available in the developer console. The public client ID is safe to use in browser code; do not treat it as a secret.
+
+## Hosted OpenID Connect
+
+The gateway publishes `GET /.well-known/openid-configuration` and `GET /.well-known/jwks.json`. Configure `ISSUER` as the public base URL over HTTPS in production; the discovery issuer must exactly match the `iss` claim in AuthForge ID tokens.
+
+Register exact callback URLs on the OAuth client, then redirect the browser to `/authorize` with:
+
+- `client_id`, the registered public client ID
+- `redirect_uri`, an exact registered callback URL
+- `response_type=code`
+- `scope=openid%20email`
+- a unique `state`
+- `code_challenge` and `code_challenge_method=S256`
+- optional `nonce`
+
+AuthForge validates the client and callback before displaying its hosted password sign-in/sign-up page. The callback receives only a short-lived, single-use authorization code and the original state; access and refresh tokens are never put in the redirect URL.
+
+Exchange the code at `POST /v1/token` using `application/x-www-form-urlencoded`:
+
+```text
+grant_type=authorization_code
+client_id=<public-client-id>
+code=<authorization-code>
+redirect_uri=<same-registered-callback>
+code_verifier=<original-pkce-verifier>
+```
+
+The response contains an AuthForge access token, refresh token, and OIDC ID token. The access token is for the AuthForge environment API; the ID token is audience-bound to the OAuth client and includes `sub`, `email`, `email_verified`, and the request `nonce` when supplied. Codes expire after five minutes and are bound to the client, callback, and S256 verifier. The token endpoint accepts browser requests only when their `Origin` matches a registered callback origin; server-side exchanges may omit `Origin`.
+
+The initial hosted screen supports password sign-in and signup. Supported scopes are `openid email`; social sign-in, userinfo, logout redirect, and broader scope/claim customization are not included yet.
 
 ## Application auth
 
@@ -129,6 +178,7 @@ Returns `{"status":"ok"}` whether or not a matching user exists.
 ```
 
 Returns `{"verified":true}` on success. Expired, unknown, or previously used tokens return `401` with `invalid_verification_token`.
+The self-hosted developer console also serves `/verify-email`, which reads the `environment_id` and `token` query parameters from the email link and confirms them with this endpoint.
 
 `POST /v1/token/refresh`
 
@@ -155,6 +205,7 @@ Failures use `{ "error": "<code>" }`.
 | Code | Meaning |
 |---|---|
 | `invalid_argument` | Missing or malformed field, including a short password |
+| `invalid_redirect_uri` | OAuth client redirect URI is not an allowed absolute HTTPS or loopback URL |
 | `invalid_credentials` | Unknown email or wrong password |
 | `invalid_api_key` | Missing or unknown `X-Api-Key` |
 | `email_already_registered` | Signup lost the unique-email race, or the email is taken |

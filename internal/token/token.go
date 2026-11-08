@@ -28,6 +28,13 @@ type AccessClaims struct {
 	EmailVerified bool   `json:"email_verified"`
 }
 
+type IDTokenClaims struct {
+	jwt.RegisteredClaims
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Nonce         string `json:"nonce,omitempty"`
+}
+
 type Signer struct {
 	issuer  string
 	private ed25519.PrivateKey
@@ -109,6 +116,27 @@ func (s *Signer) SignAccess(userID, environmentID, projectID, sessionID string, 
 	return signed, expires, nil
 }
 
+func (s *Signer) SignIDToken(userID, clientID, email, nonce string, emailVerified bool, now time.Time) (string, time.Time, error) {
+	expires := now.Add(s.ttl)
+	claims := IDTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    s.issuer,
+			Subject:   userID,
+			Audience:  jwt.ClaimStrings{clientID},
+			ExpiresAt: jwt.NewNumericDate(expires),
+			IssuedAt:  jwt.NewNumericDate(now),
+		},
+		Email: email, EmailVerified: emailVerified, Nonce: nonce,
+	}
+	unsigned := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
+	unsigned.Header["kid"] = accessKID
+	signed, err := unsigned.SignedString(s.private)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return signed, expires, nil
+}
+
 func (v *Verifier) ParseAccess(raw string) (*AccessClaims, error) {
 	parsed, err := jwt.ParseWithClaims(raw, &AccessClaims{}, func(t *jwt.Token) (any, error) {
 		kid, _ := t.Header["kid"].(string)
@@ -168,6 +196,15 @@ func NewRefresh() (plain string, sum []byte, err error) {
 		return "", nil, err
 	}
 	plain = "af_rt_" + base64.RawURLEncoding.EncodeToString(raw)
+	return plain, digest.SHA256(plain), nil
+}
+
+func NewAuthorizationCode() (plain string, sum []byte, err error) {
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", nil, err
+	}
+	plain = "af_ac_" + base64.RawURLEncoding.EncodeToString(raw)
 	return plain, digest.SHA256(plain), nil
 }
 

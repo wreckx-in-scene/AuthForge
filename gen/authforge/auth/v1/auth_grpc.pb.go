@@ -19,15 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthService_SignUp_FullMethodName                   = "/authforge.auth.v1.AuthService/SignUp"
-	AuthService_Login_FullMethodName                    = "/authforge.auth.v1.AuthService/Login"
-	AuthService_Refresh_FullMethodName                  = "/authforge.auth.v1.AuthService/Refresh"
-	AuthService_Logout_FullMethodName                   = "/authforge.auth.v1.AuthService/Logout"
-	AuthService_VerificationKeys_FullMethodName         = "/authforge.auth.v1.AuthService/VerificationKeys"
-	AuthService_RequestEmailVerification_FullMethodName = "/authforge.auth.v1.AuthService/RequestEmailVerification"
-	AuthService_VerifyEmail_FullMethodName              = "/authforge.auth.v1.AuthService/VerifyEmail"
-	AuthService_GoogleLogin_FullMethodName              = "/authforge.auth.v1.AuthService/GoogleLogin"
-	AuthService_CreateGoogleNonce_FullMethodName        = "/authforge.auth.v1.AuthService/CreateGoogleNonce"
+	AuthService_SignUp_FullMethodName                    = "/authforge.auth.v1.AuthService/SignUp"
+	AuthService_Login_FullMethodName                     = "/authforge.auth.v1.AuthService/Login"
+	AuthService_Refresh_FullMethodName                   = "/authforge.auth.v1.AuthService/Refresh"
+	AuthService_Logout_FullMethodName                    = "/authforge.auth.v1.AuthService/Logout"
+	AuthService_VerificationKeys_FullMethodName          = "/authforge.auth.v1.AuthService/VerificationKeys"
+	AuthService_RequestEmailVerification_FullMethodName  = "/authforge.auth.v1.AuthService/RequestEmailVerification"
+	AuthService_VerifyEmail_FullMethodName               = "/authforge.auth.v1.AuthService/VerifyEmail"
+	AuthService_GoogleLogin_FullMethodName               = "/authforge.auth.v1.AuthService/GoogleLogin"
+	AuthService_CreateGoogleNonce_FullMethodName         = "/authforge.auth.v1.AuthService/CreateGoogleNonce"
+	AuthService_Authorize_FullMethodName                 = "/authforge.auth.v1.AuthService/Authorize"
+	AuthService_ExchangeAuthorizationCode_FullMethodName = "/authforge.auth.v1.AuthService/ExchangeAuthorizationCode"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -43,6 +45,8 @@ type AuthServiceClient interface {
 	VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*VerifyEmailResponse, error)
 	GoogleLogin(ctx context.Context, in *GoogleLoginRequest, opts ...grpc.CallOption) (*GoogleLoginResponse, error)
 	CreateGoogleNonce(ctx context.Context, in *CreateGoogleNonceRequest, opts ...grpc.CallOption) (*CreateGoogleNonceResponse, error)
+	Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*AuthorizeResponse, error)
+	ExchangeAuthorizationCode(ctx context.Context, in *ExchangeAuthorizationCodeRequest, opts ...grpc.CallOption) (*ExchangeAuthorizationCodeResponse, error)
 }
 
 type authServiceClient struct {
@@ -143,6 +147,26 @@ func (c *authServiceClient) CreateGoogleNonce(ctx context.Context, in *CreateGoo
 	return out, nil
 }
 
+func (c *authServiceClient) Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*AuthorizeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthorizeResponse)
+	err := c.cc.Invoke(ctx, AuthService_Authorize_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) ExchangeAuthorizationCode(ctx context.Context, in *ExchangeAuthorizationCodeRequest, opts ...grpc.CallOption) (*ExchangeAuthorizationCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExchangeAuthorizationCodeResponse)
+	err := c.cc.Invoke(ctx, AuthService_ExchangeAuthorizationCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -156,6 +180,8 @@ type AuthServiceServer interface {
 	VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error)
 	GoogleLogin(context.Context, *GoogleLoginRequest) (*GoogleLoginResponse, error)
 	CreateGoogleNonce(context.Context, *CreateGoogleNonceRequest) (*CreateGoogleNonceResponse, error)
+	Authorize(context.Context, *AuthorizeRequest) (*AuthorizeResponse, error)
+	ExchangeAuthorizationCode(context.Context, *ExchangeAuthorizationCodeRequest) (*ExchangeAuthorizationCodeResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -192,6 +218,12 @@ func (UnimplementedAuthServiceServer) GoogleLogin(context.Context, *GoogleLoginR
 }
 func (UnimplementedAuthServiceServer) CreateGoogleNonce(context.Context, *CreateGoogleNonceRequest) (*CreateGoogleNonceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGoogleNonce not implemented")
+}
+func (UnimplementedAuthServiceServer) Authorize(context.Context, *AuthorizeRequest) (*AuthorizeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
+}
+func (UnimplementedAuthServiceServer) ExchangeAuthorizationCode(context.Context, *ExchangeAuthorizationCodeRequest) (*ExchangeAuthorizationCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExchangeAuthorizationCode not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -376,6 +408,42 @@ func _AuthService_CreateGoogleNonce_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_Authorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorizeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).Authorize(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_Authorize_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).Authorize(ctx, req.(*AuthorizeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_ExchangeAuthorizationCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExchangeAuthorizationCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).ExchangeAuthorizationCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_ExchangeAuthorizationCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).ExchangeAuthorizationCode(ctx, req.(*ExchangeAuthorizationCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -418,6 +486,14 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateGoogleNonce",
 			Handler:    _AuthService_CreateGoogleNonce_Handler,
+		},
+		{
+			MethodName: "Authorize",
+			Handler:    _AuthService_Authorize_Handler,
+		},
+		{
+			MethodName: "ExchangeAuthorizationCode",
+			Handler:    _AuthService_ExchangeAuthorizationCode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

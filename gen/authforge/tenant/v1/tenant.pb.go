@@ -1761,6 +1761,474 @@ func (x *RevokeAPIKeyResponse) GetRevoked() bool {
 	return false
 }
 
+type CreateOAuthClientRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     string                 `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	EnvironmentId string                 `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	RedirectUris  []string               `protobuf:"bytes,4,rep,name=redirect_uris,json=redirectUris,proto3" json:"redirect_uris,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateOAuthClientRequest) Reset() {
+	*x = CreateOAuthClientRequest{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateOAuthClientRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateOAuthClientRequest) ProtoMessage() {}
+
+func (x *CreateOAuthClientRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateOAuthClientRequest.ProtoReflect.Descriptor instead.
+func (*CreateOAuthClientRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *CreateOAuthClientRequest) GetAccountId() string {
+	if x != nil {
+		return x.AccountId
+	}
+	return ""
+}
+
+func (x *CreateOAuthClientRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *CreateOAuthClientRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateOAuthClientRequest) GetRedirectUris() []string {
+	if x != nil {
+		return x.RedirectUris
+	}
+	return nil
+}
+
+type OAuthClient struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	EnvironmentId string                 `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,3,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	RedirectUris  []string               `protobuf:"bytes,5,rep,name=redirect_uris,json=redirectUris,proto3" json:"redirect_uris,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OAuthClient) Reset() {
+	*x = OAuthClient{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OAuthClient) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OAuthClient) ProtoMessage() {}
+
+func (x *OAuthClient) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OAuthClient.ProtoReflect.Descriptor instead.
+func (*OAuthClient) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *OAuthClient) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *OAuthClient) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *OAuthClient) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *OAuthClient) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *OAuthClient) GetRedirectUris() []string {
+	if x != nil {
+		return x.RedirectUris
+	}
+	return nil
+}
+
+type CreateOAuthClientResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Client        *OAuthClient           `protobuf:"bytes,1,opt,name=client,proto3" json:"client,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateOAuthClientResponse) Reset() {
+	*x = CreateOAuthClientResponse{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateOAuthClientResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateOAuthClientResponse) ProtoMessage() {}
+
+func (x *CreateOAuthClientResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateOAuthClientResponse.ProtoReflect.Descriptor instead.
+func (*CreateOAuthClientResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *CreateOAuthClientResponse) GetClient() *OAuthClient {
+	if x != nil {
+		return x.Client
+	}
+	return nil
+}
+
+type ListOAuthClientsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     string                 `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	EnvironmentId string                 `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOAuthClientsRequest) Reset() {
+	*x = ListOAuthClientsRequest{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOAuthClientsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOAuthClientsRequest) ProtoMessage() {}
+
+func (x *ListOAuthClientsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOAuthClientsRequest.ProtoReflect.Descriptor instead.
+func (*ListOAuthClientsRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *ListOAuthClientsRequest) GetAccountId() string {
+	if x != nil {
+		return x.AccountId
+	}
+	return ""
+}
+
+func (x *ListOAuthClientsRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+type ListOAuthClientsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Clients       []*OAuthClient         `protobuf:"bytes,1,rep,name=clients,proto3" json:"clients,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOAuthClientsResponse) Reset() {
+	*x = ListOAuthClientsResponse{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOAuthClientsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOAuthClientsResponse) ProtoMessage() {}
+
+func (x *ListOAuthClientsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOAuthClientsResponse.ProtoReflect.Descriptor instead.
+func (*ListOAuthClientsResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *ListOAuthClientsResponse) GetClients() []*OAuthClient {
+	if x != nil {
+		return x.Clients
+	}
+	return nil
+}
+
+type DeleteOAuthClientRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     string                 `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	ClientId      string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteOAuthClientRequest) Reset() {
+	*x = DeleteOAuthClientRequest{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteOAuthClientRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteOAuthClientRequest) ProtoMessage() {}
+
+func (x *DeleteOAuthClientRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteOAuthClientRequest.ProtoReflect.Descriptor instead.
+func (*DeleteOAuthClientRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *DeleteOAuthClientRequest) GetAccountId() string {
+	if x != nil {
+		return x.AccountId
+	}
+	return ""
+}
+
+func (x *DeleteOAuthClientRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+type DeleteOAuthClientResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Deleted       bool                   `protobuf:"varint,1,opt,name=deleted,proto3" json:"deleted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteOAuthClientResponse) Reset() {
+	*x = DeleteOAuthClientResponse{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteOAuthClientResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteOAuthClientResponse) ProtoMessage() {}
+
+func (x *DeleteOAuthClientResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteOAuthClientResponse.ProtoReflect.Descriptor instead.
+func (*DeleteOAuthClientResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *DeleteOAuthClientResponse) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
+type ResolveOAuthClientRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveOAuthClientRequest) Reset() {
+	*x = ResolveOAuthClientRequest{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveOAuthClientRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveOAuthClientRequest) ProtoMessage() {}
+
+func (x *ResolveOAuthClientRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveOAuthClientRequest.ProtoReflect.Descriptor instead.
+func (*ResolveOAuthClientRequest) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *ResolveOAuthClientRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+type ResolveOAuthClientResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Client        *OAuthClient           `protobuf:"bytes,1,opt,name=client,proto3" json:"client,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveOAuthClientResponse) Reset() {
+	*x = ResolveOAuthClientResponse{}
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveOAuthClientResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveOAuthClientResponse) ProtoMessage() {}
+
+func (x *ResolveOAuthClientResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveOAuthClientResponse.ProtoReflect.Descriptor instead.
+func (*ResolveOAuthClientResponse) Descriptor() ([]byte, []int) {
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *ResolveOAuthClientResponse) GetClient() *OAuthClient {
+	if x != nil {
+		return x.Client
+	}
+	return nil
+}
+
 type ResolveAPIKeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -1770,7 +2238,7 @@ type ResolveAPIKeyRequest struct {
 
 func (x *ResolveAPIKeyRequest) Reset() {
 	*x = ResolveAPIKeyRequest{}
-	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[31]
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1782,7 +2250,7 @@ func (x *ResolveAPIKeyRequest) String() string {
 func (*ResolveAPIKeyRequest) ProtoMessage() {}
 
 func (x *ResolveAPIKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[31]
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1795,7 +2263,7 @@ func (x *ResolveAPIKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResolveAPIKeyRequest.ProtoReflect.Descriptor instead.
 func (*ResolveAPIKeyRequest) Descriptor() ([]byte, []int) {
-	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{31}
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *ResolveAPIKeyRequest) GetKey() string {
@@ -1819,7 +2287,7 @@ type ResolveAPIKeyResponse struct {
 
 func (x *ResolveAPIKeyResponse) Reset() {
 	*x = ResolveAPIKeyResponse{}
-	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[32]
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1831,7 +2299,7 @@ func (x *ResolveAPIKeyResponse) String() string {
 func (*ResolveAPIKeyResponse) ProtoMessage() {}
 
 func (x *ResolveAPIKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[32]
+	mi := &file_authforge_tenant_v1_tenant_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1844,7 +2312,7 @@ func (x *ResolveAPIKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResolveAPIKeyResponse.ProtoReflect.Descriptor instead.
 func (*ResolveAPIKeyResponse) Descriptor() ([]byte, []int) {
-	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{32}
+	return file_authforge_tenant_v1_tenant_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ResolveAPIKeyResponse) GetKeyId() string {
@@ -2019,7 +2487,38 @@ const file_authforge_tenant_v1_tenant_proto_rawDesc = "" +
 	"account_id\x18\x01 \x01(\tR\taccountId\x12\x15\n" +
 	"\x06key_id\x18\x02 \x01(\tR\x05keyId\"0\n" +
 	"\x14RevokeAPIKeyResponse\x12\x18\n" +
-	"\arevoked\x18\x01 \x01(\bR\arevoked\"(\n" +
+	"\arevoked\x18\x01 \x01(\bR\arevoked\"\x99\x01\n" +
+	"\x18CreateOAuthClientRequest\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\tR\taccountId\x12%\n" +
+	"\x0eenvironment_id\x18\x02 \x01(\tR\renvironmentId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12#\n" +
+	"\rredirect_uris\x18\x04 \x03(\tR\fredirectUris\"\xa9\x01\n" +
+	"\vOAuthClient\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12%\n" +
+	"\x0eenvironment_id\x18\x02 \x01(\tR\renvironmentId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x03 \x01(\tR\tprojectId\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\x12#\n" +
+	"\rredirect_uris\x18\x05 \x03(\tR\fredirectUris\"U\n" +
+	"\x19CreateOAuthClientResponse\x128\n" +
+	"\x06client\x18\x01 \x01(\v2 .authforge.tenant.v1.OAuthClientR\x06client\"_\n" +
+	"\x17ListOAuthClientsRequest\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\tR\taccountId\x12%\n" +
+	"\x0eenvironment_id\x18\x02 \x01(\tR\renvironmentId\"V\n" +
+	"\x18ListOAuthClientsResponse\x12:\n" +
+	"\aclients\x18\x01 \x03(\v2 .authforge.tenant.v1.OAuthClientR\aclients\"V\n" +
+	"\x18DeleteOAuthClientRequest\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\tR\taccountId\x12\x1b\n" +
+	"\tclient_id\x18\x02 \x01(\tR\bclientId\"5\n" +
+	"\x19DeleteOAuthClientResponse\x12\x18\n" +
+	"\adeleted\x18\x01 \x01(\bR\adeleted\"8\n" +
+	"\x19ResolveOAuthClientRequest\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\"V\n" +
+	"\x1aResolveOAuthClientResponse\x128\n" +
+	"\x06client\x18\x01 \x01(\v2 .authforge.tenant.v1.OAuthClientR\x06client\"(\n" +
 	"\x14ResolveAPIKeyRequest\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\"\xe5\x01\n" +
 	"\x15ResolveAPIKeyResponse\x12\x15\n" +
@@ -2029,7 +2528,7 @@ const file_authforge_tenant_v1_tenant_proto_rawDesc = "" +
 	"project_id\x18\x03 \x01(\tR\tprojectId\x12%\n" +
 	"\x0eenvironment_id\x18\x04 \x01(\tR\renvironmentId\x12\x1b\n" +
 	"\tkey_class\x18\x05 \x01(\tR\bkeyClass\x12)\n" +
-	"\x10environment_name\x18\x06 \x01(\tR\x0fenvironmentName2\xef\v\n" +
+	"\x10environment_name\x18\x06 \x01(\tR\x0fenvironmentName2\xbf\x0f\n" +
 	"\rTenantService\x12f\n" +
 	"\rCreateAccount\x12).authforge.tenant.v1.CreateAccountRequest\x1a*.authforge.tenant.v1.CreateAccountResponse\x12c\n" +
 	"\fLoginAccount\x12(.authforge.tenant.v1.LoginAccountRequest\x1a).authforge.tenant.v1.LoginAccountResponse\x12{\n" +
@@ -2043,7 +2542,11 @@ const file_authforge_tenant_v1_tenant_proto_rawDesc = "" +
 	"\x10ListEnvironments\x12,.authforge.tenant.v1.ListEnvironmentsRequest\x1a-.authforge.tenant.v1.ListEnvironmentsResponse\x12`\n" +
 	"\vIssueAPIKey\x12'.authforge.tenant.v1.IssueAPIKeyRequest\x1a(.authforge.tenant.v1.IssueAPIKeyResponse\x12`\n" +
 	"\vListAPIKeys\x12'.authforge.tenant.v1.ListAPIKeysRequest\x1a(.authforge.tenant.v1.ListAPIKeysResponse\x12c\n" +
-	"\fRevokeAPIKey\x12(.authforge.tenant.v1.RevokeAPIKeyRequest\x1a).authforge.tenant.v1.RevokeAPIKeyResponse\x12f\n" +
+	"\fRevokeAPIKey\x12(.authforge.tenant.v1.RevokeAPIKeyRequest\x1a).authforge.tenant.v1.RevokeAPIKeyResponse\x12r\n" +
+	"\x11CreateOAuthClient\x12-.authforge.tenant.v1.CreateOAuthClientRequest\x1a..authforge.tenant.v1.CreateOAuthClientResponse\x12o\n" +
+	"\x10ListOAuthClients\x12,.authforge.tenant.v1.ListOAuthClientsRequest\x1a-.authforge.tenant.v1.ListOAuthClientsResponse\x12r\n" +
+	"\x11DeleteOAuthClient\x12-.authforge.tenant.v1.DeleteOAuthClientRequest\x1a..authforge.tenant.v1.DeleteOAuthClientResponse\x12u\n" +
+	"\x12ResolveOAuthClient\x12..authforge.tenant.v1.ResolveOAuthClientRequest\x1a/.authforge.tenant.v1.ResolveOAuthClientResponse\x12f\n" +
 	"\rResolveAPIKey\x12).authforge.tenant.v1.ResolveAPIKeyRequest\x1a*.authforge.tenant.v1.ResolveAPIKeyResponseBGZEgithub.com/wreckx-in-scene/AuthForge/gen/authforge/tenant/v1;tenantv1b\x06proto3"
 
 var (
@@ -2058,7 +2561,7 @@ func file_authforge_tenant_v1_tenant_proto_rawDescGZIP() []byte {
 	return file_authforge_tenant_v1_tenant_proto_rawDescData
 }
 
-var file_authforge_tenant_v1_tenant_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_authforge_tenant_v1_tenant_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
 var file_authforge_tenant_v1_tenant_proto_goTypes = []any{
 	(*Account)(nil),                      // 0: authforge.tenant.v1.Account
 	(*CreateAccountRequest)(nil),         // 1: authforge.tenant.v1.CreateAccountRequest
@@ -2091,8 +2594,17 @@ var file_authforge_tenant_v1_tenant_proto_goTypes = []any{
 	(*ListAPIKeysResponse)(nil),          // 28: authforge.tenant.v1.ListAPIKeysResponse
 	(*RevokeAPIKeyRequest)(nil),          // 29: authforge.tenant.v1.RevokeAPIKeyRequest
 	(*RevokeAPIKeyResponse)(nil),         // 30: authforge.tenant.v1.RevokeAPIKeyResponse
-	(*ResolveAPIKeyRequest)(nil),         // 31: authforge.tenant.v1.ResolveAPIKeyRequest
-	(*ResolveAPIKeyResponse)(nil),        // 32: authforge.tenant.v1.ResolveAPIKeyResponse
+	(*CreateOAuthClientRequest)(nil),     // 31: authforge.tenant.v1.CreateOAuthClientRequest
+	(*OAuthClient)(nil),                  // 32: authforge.tenant.v1.OAuthClient
+	(*CreateOAuthClientResponse)(nil),    // 33: authforge.tenant.v1.CreateOAuthClientResponse
+	(*ListOAuthClientsRequest)(nil),      // 34: authforge.tenant.v1.ListOAuthClientsRequest
+	(*ListOAuthClientsResponse)(nil),     // 35: authforge.tenant.v1.ListOAuthClientsResponse
+	(*DeleteOAuthClientRequest)(nil),     // 36: authforge.tenant.v1.DeleteOAuthClientRequest
+	(*DeleteOAuthClientResponse)(nil),    // 37: authforge.tenant.v1.DeleteOAuthClientResponse
+	(*ResolveOAuthClientRequest)(nil),    // 38: authforge.tenant.v1.ResolveOAuthClientRequest
+	(*ResolveOAuthClientResponse)(nil),   // 39: authforge.tenant.v1.ResolveOAuthClientResponse
+	(*ResolveAPIKeyRequest)(nil),         // 40: authforge.tenant.v1.ResolveAPIKeyRequest
+	(*ResolveAPIKeyResponse)(nil),        // 41: authforge.tenant.v1.ResolveAPIKeyResponse
 }
 var file_authforge_tenant_v1_tenant_proto_depIdxs = []int32{
 	0,  // 0: authforge.tenant.v1.CreateAccountResponse.account:type_name -> authforge.tenant.v1.Account
@@ -2101,39 +2613,50 @@ var file_authforge_tenant_v1_tenant_proto_depIdxs = []int32{
 	17, // 3: authforge.tenant.v1.ListProjectsResponse.projects:type_name -> authforge.tenant.v1.ProjectRecord
 	22, // 4: authforge.tenant.v1.ListEnvironmentsResponse.environments:type_name -> authforge.tenant.v1.EnvironmentRecord
 	27, // 5: authforge.tenant.v1.ListAPIKeysResponse.keys:type_name -> authforge.tenant.v1.APIKeyRecord
-	1,  // 6: authforge.tenant.v1.TenantService.CreateAccount:input_type -> authforge.tenant.v1.CreateAccountRequest
-	3,  // 7: authforge.tenant.v1.TenantService.LoginAccount:input_type -> authforge.tenant.v1.LoginAccountRequest
-	5,  // 8: authforge.tenant.v1.TenantService.RequestPasswordReset:input_type -> authforge.tenant.v1.RequestPasswordResetRequest
-	7,  // 9: authforge.tenant.v1.TenantService.ResetPassword:input_type -> authforge.tenant.v1.ResetPasswordRequest
-	9,  // 10: authforge.tenant.v1.TenantService.CreateOrganization:input_type -> authforge.tenant.v1.CreateOrganizationRequest
-	11, // 11: authforge.tenant.v1.TenantService.ListOrganizations:input_type -> authforge.tenant.v1.ListOrganizationsRequest
-	14, // 12: authforge.tenant.v1.TenantService.CreateProject:input_type -> authforge.tenant.v1.CreateProjectRequest
-	16, // 13: authforge.tenant.v1.TenantService.ListProjects:input_type -> authforge.tenant.v1.ListProjectsRequest
-	19, // 14: authforge.tenant.v1.TenantService.CreateEnvironment:input_type -> authforge.tenant.v1.CreateEnvironmentRequest
-	21, // 15: authforge.tenant.v1.TenantService.ListEnvironments:input_type -> authforge.tenant.v1.ListEnvironmentsRequest
-	24, // 16: authforge.tenant.v1.TenantService.IssueAPIKey:input_type -> authforge.tenant.v1.IssueAPIKeyRequest
-	26, // 17: authforge.tenant.v1.TenantService.ListAPIKeys:input_type -> authforge.tenant.v1.ListAPIKeysRequest
-	29, // 18: authforge.tenant.v1.TenantService.RevokeAPIKey:input_type -> authforge.tenant.v1.RevokeAPIKeyRequest
-	31, // 19: authforge.tenant.v1.TenantService.ResolveAPIKey:input_type -> authforge.tenant.v1.ResolveAPIKeyRequest
-	2,  // 20: authforge.tenant.v1.TenantService.CreateAccount:output_type -> authforge.tenant.v1.CreateAccountResponse
-	4,  // 21: authforge.tenant.v1.TenantService.LoginAccount:output_type -> authforge.tenant.v1.LoginAccountResponse
-	6,  // 22: authforge.tenant.v1.TenantService.RequestPasswordReset:output_type -> authforge.tenant.v1.RequestPasswordResetResponse
-	8,  // 23: authforge.tenant.v1.TenantService.ResetPassword:output_type -> authforge.tenant.v1.ResetPasswordResponse
-	10, // 24: authforge.tenant.v1.TenantService.CreateOrganization:output_type -> authforge.tenant.v1.CreateOrganizationResponse
-	13, // 25: authforge.tenant.v1.TenantService.ListOrganizations:output_type -> authforge.tenant.v1.ListOrganizationsResponse
-	15, // 26: authforge.tenant.v1.TenantService.CreateProject:output_type -> authforge.tenant.v1.CreateProjectResponse
-	18, // 27: authforge.tenant.v1.TenantService.ListProjects:output_type -> authforge.tenant.v1.ListProjectsResponse
-	20, // 28: authforge.tenant.v1.TenantService.CreateEnvironment:output_type -> authforge.tenant.v1.CreateEnvironmentResponse
-	23, // 29: authforge.tenant.v1.TenantService.ListEnvironments:output_type -> authforge.tenant.v1.ListEnvironmentsResponse
-	25, // 30: authforge.tenant.v1.TenantService.IssueAPIKey:output_type -> authforge.tenant.v1.IssueAPIKeyResponse
-	28, // 31: authforge.tenant.v1.TenantService.ListAPIKeys:output_type -> authforge.tenant.v1.ListAPIKeysResponse
-	30, // 32: authforge.tenant.v1.TenantService.RevokeAPIKey:output_type -> authforge.tenant.v1.RevokeAPIKeyResponse
-	32, // 33: authforge.tenant.v1.TenantService.ResolveAPIKey:output_type -> authforge.tenant.v1.ResolveAPIKeyResponse
-	20, // [20:34] is the sub-list for method output_type
-	6,  // [6:20] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	32, // 6: authforge.tenant.v1.CreateOAuthClientResponse.client:type_name -> authforge.tenant.v1.OAuthClient
+	32, // 7: authforge.tenant.v1.ListOAuthClientsResponse.clients:type_name -> authforge.tenant.v1.OAuthClient
+	32, // 8: authforge.tenant.v1.ResolveOAuthClientResponse.client:type_name -> authforge.tenant.v1.OAuthClient
+	1,  // 9: authforge.tenant.v1.TenantService.CreateAccount:input_type -> authforge.tenant.v1.CreateAccountRequest
+	3,  // 10: authforge.tenant.v1.TenantService.LoginAccount:input_type -> authforge.tenant.v1.LoginAccountRequest
+	5,  // 11: authforge.tenant.v1.TenantService.RequestPasswordReset:input_type -> authforge.tenant.v1.RequestPasswordResetRequest
+	7,  // 12: authforge.tenant.v1.TenantService.ResetPassword:input_type -> authforge.tenant.v1.ResetPasswordRequest
+	9,  // 13: authforge.tenant.v1.TenantService.CreateOrganization:input_type -> authforge.tenant.v1.CreateOrganizationRequest
+	11, // 14: authforge.tenant.v1.TenantService.ListOrganizations:input_type -> authforge.tenant.v1.ListOrganizationsRequest
+	14, // 15: authforge.tenant.v1.TenantService.CreateProject:input_type -> authforge.tenant.v1.CreateProjectRequest
+	16, // 16: authforge.tenant.v1.TenantService.ListProjects:input_type -> authforge.tenant.v1.ListProjectsRequest
+	19, // 17: authforge.tenant.v1.TenantService.CreateEnvironment:input_type -> authforge.tenant.v1.CreateEnvironmentRequest
+	21, // 18: authforge.tenant.v1.TenantService.ListEnvironments:input_type -> authforge.tenant.v1.ListEnvironmentsRequest
+	24, // 19: authforge.tenant.v1.TenantService.IssueAPIKey:input_type -> authforge.tenant.v1.IssueAPIKeyRequest
+	26, // 20: authforge.tenant.v1.TenantService.ListAPIKeys:input_type -> authforge.tenant.v1.ListAPIKeysRequest
+	29, // 21: authforge.tenant.v1.TenantService.RevokeAPIKey:input_type -> authforge.tenant.v1.RevokeAPIKeyRequest
+	31, // 22: authforge.tenant.v1.TenantService.CreateOAuthClient:input_type -> authforge.tenant.v1.CreateOAuthClientRequest
+	34, // 23: authforge.tenant.v1.TenantService.ListOAuthClients:input_type -> authforge.tenant.v1.ListOAuthClientsRequest
+	36, // 24: authforge.tenant.v1.TenantService.DeleteOAuthClient:input_type -> authforge.tenant.v1.DeleteOAuthClientRequest
+	38, // 25: authforge.tenant.v1.TenantService.ResolveOAuthClient:input_type -> authforge.tenant.v1.ResolveOAuthClientRequest
+	40, // 26: authforge.tenant.v1.TenantService.ResolveAPIKey:input_type -> authforge.tenant.v1.ResolveAPIKeyRequest
+	2,  // 27: authforge.tenant.v1.TenantService.CreateAccount:output_type -> authforge.tenant.v1.CreateAccountResponse
+	4,  // 28: authforge.tenant.v1.TenantService.LoginAccount:output_type -> authforge.tenant.v1.LoginAccountResponse
+	6,  // 29: authforge.tenant.v1.TenantService.RequestPasswordReset:output_type -> authforge.tenant.v1.RequestPasswordResetResponse
+	8,  // 30: authforge.tenant.v1.TenantService.ResetPassword:output_type -> authforge.tenant.v1.ResetPasswordResponse
+	10, // 31: authforge.tenant.v1.TenantService.CreateOrganization:output_type -> authforge.tenant.v1.CreateOrganizationResponse
+	13, // 32: authforge.tenant.v1.TenantService.ListOrganizations:output_type -> authforge.tenant.v1.ListOrganizationsResponse
+	15, // 33: authforge.tenant.v1.TenantService.CreateProject:output_type -> authforge.tenant.v1.CreateProjectResponse
+	18, // 34: authforge.tenant.v1.TenantService.ListProjects:output_type -> authforge.tenant.v1.ListProjectsResponse
+	20, // 35: authforge.tenant.v1.TenantService.CreateEnvironment:output_type -> authforge.tenant.v1.CreateEnvironmentResponse
+	23, // 36: authforge.tenant.v1.TenantService.ListEnvironments:output_type -> authforge.tenant.v1.ListEnvironmentsResponse
+	25, // 37: authforge.tenant.v1.TenantService.IssueAPIKey:output_type -> authforge.tenant.v1.IssueAPIKeyResponse
+	28, // 38: authforge.tenant.v1.TenantService.ListAPIKeys:output_type -> authforge.tenant.v1.ListAPIKeysResponse
+	30, // 39: authforge.tenant.v1.TenantService.RevokeAPIKey:output_type -> authforge.tenant.v1.RevokeAPIKeyResponse
+	33, // 40: authforge.tenant.v1.TenantService.CreateOAuthClient:output_type -> authforge.tenant.v1.CreateOAuthClientResponse
+	35, // 41: authforge.tenant.v1.TenantService.ListOAuthClients:output_type -> authforge.tenant.v1.ListOAuthClientsResponse
+	37, // 42: authforge.tenant.v1.TenantService.DeleteOAuthClient:output_type -> authforge.tenant.v1.DeleteOAuthClientResponse
+	39, // 43: authforge.tenant.v1.TenantService.ResolveOAuthClient:output_type -> authforge.tenant.v1.ResolveOAuthClientResponse
+	41, // 44: authforge.tenant.v1.TenantService.ResolveAPIKey:output_type -> authforge.tenant.v1.ResolveAPIKeyResponse
+	27, // [27:45] is the sub-list for method output_type
+	9,  // [9:27] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_authforge_tenant_v1_tenant_proto_init() }
@@ -2147,7 +2670,7 @@ func file_authforge_tenant_v1_tenant_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_authforge_tenant_v1_tenant_proto_rawDesc), len(file_authforge_tenant_v1_tenant_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   33,
+			NumMessages:   42,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

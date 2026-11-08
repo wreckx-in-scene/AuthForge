@@ -2,7 +2,11 @@ package store
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/base64"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +20,8 @@ import (
 	"github.com/wreckx-in-scene/AuthForge/internal/token"
 )
 
+const authorizationCodeTTL = 5 * time.Minute
+
 type Issued struct {
 	SessionID     string
 	EnvironmentID string
@@ -23,6 +29,7 @@ type Issued struct {
 	UserID        string
 	RefreshToken  string
 	ExpiresAt     time.Time
+	Nonce         string
 }
 
 type Store struct {
@@ -60,6 +67,120 @@ func (s *Store) Create(ctx context.Context, environmentID, projectID, userID str
 		return nil
 	})
 	if err != nil {
+		return Issued{}, err
+	}
+	return issued, nil
+}
+
+func (s *Store) IssueAuthorizationCode(ctx context.Context, environmentID, projectID, userID, clientID, redirectURI, codeChallenge, nonce string) (string, time.Time, error) {
+	if err := id.Parse(environmentID, projectID, userID, clientID); err != nil ||
+		redirectURI == "" || len(redirectURI) > 2048 || len(nonce) > 512 ||
+		strings.ContainsAny(nonce, "\r\n") || !validCodeChallenge(codeChallenge) {
+		return "", time.Time{}, errs.ErrInvalid
+	}
+	code, codeHash, err := token.NewAuthorizationCode()
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	expiresAt := time.Now().UTC().Add(authorizationCodeTTL)
+	err = database.InEnvironment(ctx, s.pool, environmentID, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, `
+			DELETE FROM session.authorization_codes
+			WHERE environment_id = $1 AND (expires_at <= now() OR consumed_at IS NOT NULL)
+		`, environmentID); err != nil {
+			return err
+		}
+		_, err := tx.Exec(ctx, `
+			INSERT INTO session.authorization_codes (
+				code_hash, environment_id, project_id, user_id, client_id,
+				redirect_uri, code_challenge, expires_at, nonce
+			)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		`, codeHash, environmentID, projectID, userID, clientID, redirectURI, codeChallenge, expiresAt, nonce)
+		return err
+	})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return code, expiresAt, nil
+}
+
+func (s *Store) ExchangeAuthorizationCode(ctx context.Context, code, clientID, redirectURI, codeVerifier string) (Issued, error) {
+	if code == "" || len(code) > 128 || redirectURI == "" || len(redirectURI) > 2048 {
+		return Issued{}, errs.ErrUnauthenticated
+	}
+	if err := id.Parse(clientID); err != nil {
+		return Issued{}, errs.ErrUnauthenticated
+	}
+	challenge, err := codeChallenge(codeVerifier)
+	if err != nil {
+		return Issued{}, errs.ErrUnauthenticated
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Issued{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var environmentID *string
+	if err := tx.QueryRow(ctx, `SELECT session.peek_authorization_code_environment($1)::text`, digest.SHA256(code)).Scan(&environmentID); err != nil {
+		return Issued{}, err
+	}
+	if environmentID == nil || *environmentID == "" {
+		return Issued{}, errs.ErrUnauthenticated
+	}
+	if _, err := tx.Exec(ctx, `SELECT set_config('authforge.environment_id', $1, true)`, *environmentID); err != nil {
+		return Issued{}, err
+	}
+
+	var (
+		projectID, userID, storedClientID, storedRedirectURI, storedChallenge, nonce string
+		expiresAt                                                                    time.Time
+		consumedAt                                                                   *time.Time
+	)
+	err = tx.QueryRow(ctx, `
+		SELECT project_id::text, user_id::text, client_id::text, redirect_uri,
+		       code_challenge, nonce, expires_at, consumed_at
+		FROM session.authorization_codes
+		WHERE code_hash = $1
+		FOR UPDATE
+	`, digest.SHA256(code)).Scan(
+		&projectID, &userID, &storedClientID, &storedRedirectURI, &storedChallenge, &nonce, &expiresAt, &consumedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Issued{}, errs.ErrUnauthenticated
+	}
+	if err != nil {
+		return Issued{}, err
+	}
+	now := time.Now().UTC()
+	if consumedAt != nil || !now.Before(expiresAt) ||
+		storedClientID != clientID || storedRedirectURI != redirectURI ||
+		subtle.ConstantTimeCompare([]byte(storedChallenge), []byte(challenge)) != 1 {
+		return Issued{}, errs.ErrUnauthenticated
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE session.authorization_codes SET consumed_at = $2 WHERE code_hash = $1
+	`, digest.SHA256(code), now); err != nil {
+		return Issued{}, err
+	}
+
+	issued := Issued{
+		SessionID: uuid.NewString(), EnvironmentID: *environmentID, ProjectID: projectID,
+		UserID: userID, ExpiresAt: now.Add(s.ttl), Nonce: nonce,
+	}
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO session.sessions (id, environment_id, project_id, user_id, status, expires_at)
+		VALUES ($1, $2, $3, $4, 'active', $5)
+	`, issued.SessionID, issued.EnvironmentID, projectID, userID, issued.ExpiresAt); err != nil {
+		return Issued{}, err
+	}
+	issued.RefreshToken, err = insertRefresh(ctx, tx, issued.EnvironmentID, issued.SessionID, "", issued.ExpiresAt)
+	if err != nil {
+		return Issued{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return Issued{}, err
 	}
 	return issued, nil
@@ -205,6 +326,34 @@ func (s *Store) Revoke(ctx context.Context, refreshToken, sessionID, environment
 		return "", err
 	}
 	return sessionID, nil
+}
+
+func codeChallenge(verifier string) (string, error) {
+	if !validCodeVerifier(verifier) {
+		return "", errs.ErrInvalid
+	}
+	sum := sha256.Sum256([]byte(verifier))
+	return base64.RawURLEncoding.EncodeToString(sum[:]), nil
+}
+
+func validCodeChallenge(challenge string) bool {
+	raw, err := base64.RawURLEncoding.DecodeString(challenge)
+	return err == nil && len(raw) == sha256.Size && base64.RawURLEncoding.EncodeToString(raw) == challenge
+}
+
+func validCodeVerifier(verifier string) bool {
+	if len(verifier) < 43 || len(verifier) > 128 {
+		return false
+	}
+	for _, char := range []byte(verifier) {
+		if !(char >= 'A' && char <= 'Z') &&
+			!(char >= 'a' && char <= 'z') &&
+			!(char >= '0' && char <= '9') &&
+			!strings.ContainsRune("-._~", rune(char)) {
+			return false
+		}
+	}
+	return true
 }
 
 func insertRefresh(ctx context.Context, tx pgx.Tx, environmentID, sessionID, parentID string, expires time.Time) (string, error) {

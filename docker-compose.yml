@@ -52,7 +52,7 @@ services:
       SMTP_ADDR: mailpit:1025
       SMTP_FROM: AuthForge <no-reply@authforge.local>
       SMTP_STARTTLS: "false"
-      RESET_PASSWORD_URL: http://localhost:3000/reset-password
+      RESET_PASSWORD_URL: http://localhost:8080/reset-password
       HEALTH_PORT: "8081"
     depends_on:
       migrate:
@@ -74,7 +74,7 @@ services:
         CMD: ./services/identity/cmd/identity
     environment:
       <<: *appdb
-      EMAIL_VERIFICATION_URL: http://localhost:3000/verify-email
+      EMAIL_VERIFICATION_URL: http://localhost:8080/verify-email
     depends_on:
       migrate:
         condition: service_completed_successfully

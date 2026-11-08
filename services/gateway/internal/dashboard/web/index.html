@@ -68,9 +68,151 @@
                 <span>Create account</span><span class="button-arrow" aria-hidden="true">→</span>
               </button>
             </form>
+            <button id="forgot-password" class="text-button auth-link" type="button" hidden>Forgot password?</button>
             <p id="auth-notice" class="notice" role="alert" hidden></p>
+            <form id="password-reset-request-form" class="form-stack" hidden>
+              <label class="field">
+                <span>Email address</span>
+                <input name="email" type="email" autocomplete="email" maxlength="320" placeholder="you@company.com" required>
+              </label>
+              <button class="button button-primary button-wide" type="submit">Send reset link <span class="button-arrow" aria-hidden="true">→</span></button>
+              <button id="back-to-login" class="text-button" type="button">Back to sign in</button>
+            </form>
+            <p id="password-reset-request-notice" class="notice" role="status" hidden></p>
           </div>
           <p class="auth-footnote">By continuing, you agree to keep your credentials private and secure.</p>
+          <p class="auth-footnote">Want to try the application API? <a href="/demo">Open the developer demo</a>.</p>
+        </section>
+
+        <section id="hosted-auth-view" class="auth-view" hidden>
+          <div class="auth-heading">
+            <span class="eyebrow eyebrow-dark">SECURE SIGN-IN</span>
+            <h2>Sign in to your application</h2>
+            <p>Use your application account to continue. Your credentials stay with AuthForge.</p>
+          </div>
+          <div class="card auth-card">
+            <div class="mode-switch" role="tablist" aria-label="Application account action">
+              <button id="hosted-login-tab" class="mode-tab is-active" type="button" role="tab" aria-selected="true">Sign in</button>
+              <button id="hosted-signup-tab" class="mode-tab" type="button" role="tab" aria-selected="false">Create account</button>
+            </div>
+            <form id="hosted-auth-form" class="form-stack" action="/v1/authorize" method="post">
+              <input name="client_id" type="hidden">
+              <input name="redirect_uri" type="hidden">
+              <input name="response_type" type="hidden">
+              <input name="scope" type="hidden">
+              <input name="state" type="hidden">
+              <input name="code_challenge" type="hidden">
+              <input name="code_challenge_method" type="hidden">
+              <input name="nonce" type="hidden">
+              <input name="action" type="hidden" value="login">
+              <label class="field">
+                <span>Email address</span>
+                <input name="email" type="email" autocomplete="email" maxlength="320" required>
+              </label>
+              <label class="field">
+                <span>Password</span>
+                <input name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required>
+              </label>
+              <button id="hosted-auth-submit" class="button button-primary button-wide" type="submit">Continue</button>
+            </form>
+            <p id="hosted-auth-notice" class="notice" role="alert" hidden></p>
+          </div>
+          <p class="auth-footnote">After signing in, you’ll return to the application that sent you here.</p>
+        </section>
+
+        <section id="reset-password-view" class="auth-view" hidden>
+          <div class="auth-heading">
+            <span class="eyebrow eyebrow-dark">ACCOUNT RECOVERY</span>
+            <h2>Choose a new password</h2>
+            <p>Use a strong password you don’t use for another account.</p>
+          </div>
+          <div class="card auth-card reset-card">
+            <form id="password-reset-form" class="form-stack">
+              <label class="field">
+                <span>New password</span>
+                <input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required>
+                <span class="field-hint">Use at least 8 characters.</span>
+              </label>
+              <label class="field">
+                <span>Confirm new password</span>
+                <input name="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Enter your new password again" required>
+              </label>
+              <button class="button button-primary button-wide" type="submit">Reset password <span class="button-arrow" aria-hidden="true">→</span></button>
+            </form>
+            <p id="password-reset-notice" class="notice" role="alert" hidden></p>
+            <a id="reset-sign-in" class="text-button reset-sign-in" href="/">Return to sign in</a>
+          </div>
+        </section>
+
+        <section id="verify-email-view" class="auth-view action-view" hidden>
+          <div class="auth-heading">
+            <span class="eyebrow eyebrow-dark">EMAIL VERIFICATION</span>
+            <h2>Verify your email</h2>
+            <p>Confirm the email address you use to sign in to this application.</p>
+          </div>
+          <div class="card auth-card">
+            <p id="verify-email-notice" class="notice" role="status" hidden></p>
+            <a class="text-button reset-sign-in" href="/demo">Return to the developer demo</a>
+          </div>
+        </section>
+
+        <section id="demo-view" class="demo-view" hidden>
+          <div class="workspace-heading">
+            <div>
+              <span class="eyebrow eyebrow-dark">APPLICATION API QUICKSTART</span>
+              <h2>Try AuthForge in your browser.</h2>
+              <p>Use a development publishable key from your workspace. This demo keeps tokens in memory only.</p>
+            </div>
+            <a class="text-button" href="/">Back to developer console</a>
+          </div>
+          <div class="card demo-card">
+            <label class="field">
+              <span>Development publishable key</span>
+              <input id="demo-api-key" type="password" autocomplete="off" placeholder="af_test_pk_…" spellcheck="false" required>
+              <span class="field-hint">Do not use a production or secret key in this demo.</span>
+            </label>
+            <div class="demo-columns">
+              <form id="demo-signup-form" class="form-stack">
+                <h3>Create an application user</h3>
+                <label class="field">
+                  <span>Email address</span>
+                  <input name="email" type="email" autocomplete="email" maxlength="320" required>
+                </label>
+                <label class="field">
+                  <span>Password</span>
+                  <input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+                </label>
+                <button class="button button-primary button-wide" type="submit">Sign up</button>
+              </form>
+              <form id="demo-login-form" class="form-stack">
+                <h3>Sign in</h3>
+                <label class="field">
+                  <span>Email address</span>
+                  <input name="email" type="email" autocomplete="email" maxlength="320" required>
+                </label>
+                <label class="field">
+                  <span>Password</span>
+                  <input name="password" type="password" autocomplete="current-password" maxlength="128" required>
+                </label>
+                <button class="button button-secondary button-wide" type="submit">Sign in</button>
+              </form>
+            </div>
+            <div id="demo-session" class="demo-session" hidden>
+              <div class="demo-session-heading">
+                <h3>Application session</h3>
+                <span id="demo-verification-status" class="key-status"></span>
+              </div>
+              <pre id="demo-user" class="demo-output"></pre>
+              <div class="demo-actions">
+                <button id="demo-resend-verification" class="button button-secondary button-small" type="button">Resend verification email</button>
+                <button id="demo-current-user" class="button button-secondary button-small" type="button">Get current user</button>
+                <button id="demo-refresh" class="button button-secondary button-small" type="button">Refresh session</button>
+                <button id="demo-logout" class="button button-quiet button-small" type="button">Log out</button>
+              </div>
+            </div>
+            <p id="demo-notice" class="notice" role="status" hidden></p>
+          </div>
+          <p class="auth-footnote">Local verification links are captured by Mailpit at <code>http://localhost:8025</code>. Google sign-in requires a configured platform client ID.</p>
         </section>
 
         <section id="setup-view" class="setup-view" hidden>
@@ -233,6 +375,24 @@
                 </div>
               </div>
               <div id="key-list" class="resource-list"><p class="resource-empty">Choose an environment.</p></div>
+            </section>
+            <section class="resource-card resource-card-wide">
+              <div class="resource-card-heading">
+                <span class="card-kicker">OAUTH CLIENTS</span>
+              </div>
+              <form id="oauth-client-form" class="client-form">
+                <label class="field">
+                  <span>Application name</span>
+                  <input name="name" type="text" maxlength="80" placeholder="My web app" required>
+                </label>
+                <label class="field">
+                  <span>Allowed callback URLs <span class="optional">(one per line)</span></span>
+                  <textarea name="redirect_uris" rows="3" maxlength="20480" placeholder="https://app.example.com/auth/callback&#10;http://localhost:3000/auth/callback" required></textarea>
+                  <span class="field-hint">Use HTTPS except for localhost during development. URLs must match exactly during sign-in.</span>
+                </label>
+                <button id="create-oauth-client" class="button button-secondary button-small" type="submit" disabled>Register application</button>
+              </form>
+              <div id="oauth-client-list" class="resource-list"><p class="resource-empty">Choose an environment.</p></div>
             </section>
           </div>
         </section>

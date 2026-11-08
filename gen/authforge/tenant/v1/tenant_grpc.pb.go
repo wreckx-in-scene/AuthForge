@@ -32,6 +32,10 @@ const (
 	TenantService_IssueAPIKey_FullMethodName          = "/authforge.tenant.v1.TenantService/IssueAPIKey"
 	TenantService_ListAPIKeys_FullMethodName          = "/authforge.tenant.v1.TenantService/ListAPIKeys"
 	TenantService_RevokeAPIKey_FullMethodName         = "/authforge.tenant.v1.TenantService/RevokeAPIKey"
+	TenantService_CreateOAuthClient_FullMethodName    = "/authforge.tenant.v1.TenantService/CreateOAuthClient"
+	TenantService_ListOAuthClients_FullMethodName     = "/authforge.tenant.v1.TenantService/ListOAuthClients"
+	TenantService_DeleteOAuthClient_FullMethodName    = "/authforge.tenant.v1.TenantService/DeleteOAuthClient"
+	TenantService_ResolveOAuthClient_FullMethodName   = "/authforge.tenant.v1.TenantService/ResolveOAuthClient"
 	TenantService_ResolveAPIKey_FullMethodName        = "/authforge.tenant.v1.TenantService/ResolveAPIKey"
 )
 
@@ -52,6 +56,10 @@ type TenantServiceClient interface {
 	IssueAPIKey(ctx context.Context, in *IssueAPIKeyRequest, opts ...grpc.CallOption) (*IssueAPIKeyResponse, error)
 	ListAPIKeys(ctx context.Context, in *ListAPIKeysRequest, opts ...grpc.CallOption) (*ListAPIKeysResponse, error)
 	RevokeAPIKey(ctx context.Context, in *RevokeAPIKeyRequest, opts ...grpc.CallOption) (*RevokeAPIKeyResponse, error)
+	CreateOAuthClient(ctx context.Context, in *CreateOAuthClientRequest, opts ...grpc.CallOption) (*CreateOAuthClientResponse, error)
+	ListOAuthClients(ctx context.Context, in *ListOAuthClientsRequest, opts ...grpc.CallOption) (*ListOAuthClientsResponse, error)
+	DeleteOAuthClient(ctx context.Context, in *DeleteOAuthClientRequest, opts ...grpc.CallOption) (*DeleteOAuthClientResponse, error)
+	ResolveOAuthClient(ctx context.Context, in *ResolveOAuthClientRequest, opts ...grpc.CallOption) (*ResolveOAuthClientResponse, error)
 	ResolveAPIKey(ctx context.Context, in *ResolveAPIKeyRequest, opts ...grpc.CallOption) (*ResolveAPIKeyResponse, error)
 }
 
@@ -193,6 +201,46 @@ func (c *tenantServiceClient) RevokeAPIKey(ctx context.Context, in *RevokeAPIKey
 	return out, nil
 }
 
+func (c *tenantServiceClient) CreateOAuthClient(ctx context.Context, in *CreateOAuthClientRequest, opts ...grpc.CallOption) (*CreateOAuthClientResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateOAuthClientResponse)
+	err := c.cc.Invoke(ctx, TenantService_CreateOAuthClient_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantServiceClient) ListOAuthClients(ctx context.Context, in *ListOAuthClientsRequest, opts ...grpc.CallOption) (*ListOAuthClientsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListOAuthClientsResponse)
+	err := c.cc.Invoke(ctx, TenantService_ListOAuthClients_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantServiceClient) DeleteOAuthClient(ctx context.Context, in *DeleteOAuthClientRequest, opts ...grpc.CallOption) (*DeleteOAuthClientResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteOAuthClientResponse)
+	err := c.cc.Invoke(ctx, TenantService_DeleteOAuthClient_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantServiceClient) ResolveOAuthClient(ctx context.Context, in *ResolveOAuthClientRequest, opts ...grpc.CallOption) (*ResolveOAuthClientResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResolveOAuthClientResponse)
+	err := c.cc.Invoke(ctx, TenantService_ResolveOAuthClient_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tenantServiceClient) ResolveAPIKey(ctx context.Context, in *ResolveAPIKeyRequest, opts ...grpc.CallOption) (*ResolveAPIKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ResolveAPIKeyResponse)
@@ -220,6 +268,10 @@ type TenantServiceServer interface {
 	IssueAPIKey(context.Context, *IssueAPIKeyRequest) (*IssueAPIKeyResponse, error)
 	ListAPIKeys(context.Context, *ListAPIKeysRequest) (*ListAPIKeysResponse, error)
 	RevokeAPIKey(context.Context, *RevokeAPIKeyRequest) (*RevokeAPIKeyResponse, error)
+	CreateOAuthClient(context.Context, *CreateOAuthClientRequest) (*CreateOAuthClientResponse, error)
+	ListOAuthClients(context.Context, *ListOAuthClientsRequest) (*ListOAuthClientsResponse, error)
+	DeleteOAuthClient(context.Context, *DeleteOAuthClientRequest) (*DeleteOAuthClientResponse, error)
+	ResolveOAuthClient(context.Context, *ResolveOAuthClientRequest) (*ResolveOAuthClientResponse, error)
 	ResolveAPIKey(context.Context, *ResolveAPIKeyRequest) (*ResolveAPIKeyResponse, error)
 	mustEmbedUnimplementedTenantServiceServer()
 }
@@ -269,6 +321,18 @@ func (UnimplementedTenantServiceServer) ListAPIKeys(context.Context, *ListAPIKey
 }
 func (UnimplementedTenantServiceServer) RevokeAPIKey(context.Context, *RevokeAPIKeyRequest) (*RevokeAPIKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RevokeAPIKey not implemented")
+}
+func (UnimplementedTenantServiceServer) CreateOAuthClient(context.Context, *CreateOAuthClientRequest) (*CreateOAuthClientResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOAuthClient not implemented")
+}
+func (UnimplementedTenantServiceServer) ListOAuthClients(context.Context, *ListOAuthClientsRequest) (*ListOAuthClientsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListOAuthClients not implemented")
+}
+func (UnimplementedTenantServiceServer) DeleteOAuthClient(context.Context, *DeleteOAuthClientRequest) (*DeleteOAuthClientResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteOAuthClient not implemented")
+}
+func (UnimplementedTenantServiceServer) ResolveOAuthClient(context.Context, *ResolveOAuthClientRequest) (*ResolveOAuthClientResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResolveOAuthClient not implemented")
 }
 func (UnimplementedTenantServiceServer) ResolveAPIKey(context.Context, *ResolveAPIKeyRequest) (*ResolveAPIKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResolveAPIKey not implemented")
@@ -528,6 +592,78 @@ func _TenantService_RevokeAPIKey_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TenantService_CreateOAuthClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOAuthClientRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).CreateOAuthClient(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_CreateOAuthClient_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).CreateOAuthClient(ctx, req.(*CreateOAuthClientRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantService_ListOAuthClients_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListOAuthClientsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).ListOAuthClients(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_ListOAuthClients_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).ListOAuthClients(ctx, req.(*ListOAuthClientsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantService_DeleteOAuthClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteOAuthClientRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).DeleteOAuthClient(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_DeleteOAuthClient_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).DeleteOAuthClient(ctx, req.(*DeleteOAuthClientRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantService_ResolveOAuthClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveOAuthClientRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantServiceServer).ResolveOAuthClient(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantService_ResolveOAuthClient_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantServiceServer).ResolveOAuthClient(ctx, req.(*ResolveOAuthClientRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TenantService_ResolveAPIKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResolveAPIKeyRequest)
 	if err := dec(in); err != nil {
@@ -604,6 +740,22 @@ var TenantService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RevokeAPIKey",
 			Handler:    _TenantService_RevokeAPIKey_Handler,
+		},
+		{
+			MethodName: "CreateOAuthClient",
+			Handler:    _TenantService_CreateOAuthClient_Handler,
+		},
+		{
+			MethodName: "ListOAuthClients",
+			Handler:    _TenantService_ListOAuthClients_Handler,
+		},
+		{
+			MethodName: "DeleteOAuthClient",
+			Handler:    _TenantService_DeleteOAuthClient_Handler,
+		},
+		{
+			MethodName: "ResolveOAuthClient",
+			Handler:    _TenantService_ResolveOAuthClient_Handler,
 		},
 		{
 			MethodName: "ResolveAPIKey",

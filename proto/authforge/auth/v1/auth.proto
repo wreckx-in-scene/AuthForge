@@ -14,6 +14,8 @@ service AuthService {
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
   rpc GoogleLogin(GoogleLoginRequest) returns (GoogleLoginResponse);
   rpc CreateGoogleNonce(CreateGoogleNonceRequest) returns (CreateGoogleNonceResponse);
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+  rpc ExchangeAuthorizationCode(ExchangeAuthorizationCodeRequest) returns (ExchangeAuthorizationCodeResponse);
 }
 
 message SignUpRequest {
@@ -117,4 +119,38 @@ message CreateGoogleNonceRequest {
 
 message CreateGoogleNonceResponse {
   string nonce = 1;
+}
+
+message AuthorizeRequest {
+  string environment_id = 1;
+  string project_id = 2;
+  string client_id = 3;
+  string redirect_uri = 4;
+  string code_challenge = 5;
+  string nonce = 6;
+  string email = 7;
+  string password = 8;
+  bool signup = 9;
+}
+
+message AuthorizeResponse {
+  string code = 1;
+  int64 expires_at = 2;
+}
+
+message ExchangeAuthorizationCodeRequest {
+  string code = 1;
+  string client_id = 2;
+  string redirect_uri = 3;
+  string code_verifier = 4;
+}
+
+message ExchangeAuthorizationCodeResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  string id_token = 3;
+  int64 access_expires_at = 4;
+  string user_id = 5;
+  string session_id = 6;
+  bool email_verified = 7;
 }

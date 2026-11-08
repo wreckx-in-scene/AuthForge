@@ -6,6 +6,9 @@ const authNotice = document.querySelector("#auth-notice");
 const setupNotice = document.querySelector("#setup-notice");
 const accountBar = document.querySelector("#account-bar");
 const accountName = document.querySelector("#account-name");
+const resetRequestForm = document.querySelector("#password-reset-request-form");
+const resetRequestNotice = document.querySelector("#password-reset-request-notice");
+const resetPasswordForm = document.querySelector("#password-reset-form");
 const state = {
   accessToken: "",
   expiresAt: 0,
@@ -32,6 +35,9 @@ const errorMessages = {
   unauthenticated: "Your session expired. Sign in again to continue.",
   not_found: "We couldn’t find that resource. Sign in again and retry.",
   already_exists: "That environment already exists. Choose a different one.",
+  invalid_redirect_uri: "Use valid HTTPS callback URLs, or localhost for development.",
+  invalid_reset_token: "This reset link has expired or was already used. Request a new one.",
+  invalid_verification_token: "This verification link has expired or was already used. Request a new one.",
   rate_limited: "Too many attempts. Wait a little and try again.",
 };
 
@@ -43,6 +49,7 @@ function showNotice(element, message) {
 function clearNotice(element) {
   element.textContent = "";
   element.hidden = true;
+  element.classList.remove("notice-success");
 }
 
 async function api(path, { method = "POST", body, authenticated = false } = {}) {
@@ -158,11 +165,16 @@ function switchAuthMode(mode) {
   document.querySelector("#auth-title").textContent = signup ? "Create your account" : "Welcome back";
   document.querySelector("#auth-description").textContent = signup
     ? "Start building with AuthForge in just a few steps."
-    : "Sign in to set up a new workspace.";
+    : "Sign in to manage your workspaces.";
   document.querySelector("#account-submit").innerHTML = signup
     ? '<span>Create account</span><span class="button-arrow" aria-hidden="true">→</span>'
     : '<span>Sign in</span><span class="button-arrow" aria-hidden="true">→</span>';
   authForm.dataset.mode = mode;
+  document.querySelector("#forgot-password").hidden = signup;
+  document.querySelector(".mode-switch").hidden = false;
+  authForm.hidden = false;
+  resetRequestForm.hidden = true;
+  clearNotice(resetRequestNotice);
   clearNotice(authNotice);
 }
 
@@ -275,6 +287,35 @@ function renderKeyRows(keys) {
   }
 }
 
+function renderOAuthClientRows(clients) {
+  const container = document.querySelector("#oauth-client-list");
+  container.replaceChildren();
+  if (clients.length === 0) {
+    addEmptyMessage(container, "No OAuth clients registered for this environment.");
+    return;
+  }
+  for (const client of clients) {
+    const row = document.createElement("div");
+    row.className = "key-row";
+    const main = document.createElement("span");
+    main.className = "key-row-main";
+    const name = document.createElement("strong");
+    name.textContent = client.name;
+    const details = document.createElement("small");
+    details.textContent = `Client ID: ${client.client_id}`;
+    const callbacks = document.createElement("small");
+    callbacks.textContent = client.redirect_uris.join(" · ");
+    main.append(name, details, callbacks);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "text-button";
+    remove.textContent = "Delete";
+    remove.addEventListener("click", () => deleteOAuthClient(client.client_id, client.name));
+    row.append(main, remove);
+    container.append(row);
+  }
+}
+
 function showWorkspaceView() {
   authView.hidden = true;
   setupView.hidden = true;
@@ -329,9 +370,11 @@ async function loadOrganizations() {
       addEmptyMessage(document.querySelector("#project-list"), "Create an organization to get started.");
       addEmptyMessage(document.querySelector("#environment-list"), "Choose a project.");
       addEmptyMessage(document.querySelector("#key-list"), "Choose an environment.");
+      addEmptyMessage(document.querySelector("#oauth-client-list"), "Choose an environment.");
       document.querySelector("#add-project").disabled = true;
       document.querySelector("#add-environment").disabled = true;
       document.querySelector("#issue-key").disabled = true;
+      document.querySelector("#create-oauth-client").disabled = true;
     }
   } catch (error) {
     handleError(notice, error);
@@ -354,6 +397,7 @@ async function selectOrganization(organizationID) {
   document.querySelector("#add-project").disabled = false;
   document.querySelector("#add-environment").disabled = true;
   document.querySelector("#issue-key").disabled = true;
+  document.querySelector("#create-oauth-client").disabled = true;
   document.querySelector("#new-key-notice").hidden = true;
   try {
     const response = await api(`/v1/organizations/${encodeURIComponent(organizationID)}/projects`, {
@@ -381,6 +425,7 @@ async function selectOrganization(organizationID) {
       state.workspaceEnvironments = [];
       addEmptyMessage(document.querySelector("#environment-list"), "Choose a project.");
       addEmptyMessage(document.querySelector("#key-list"), "Choose an environment.");
+      addEmptyMessage(document.querySelector("#oauth-client-list"), "Choose an environment.");
     }
   } catch (error) {
     handleError(notice, error);
@@ -399,6 +444,7 @@ async function selectProject(projectID) {
   saveSession();
   document.querySelector("#add-environment").disabled = false;
   document.querySelector("#issue-key").disabled = true;
+  document.querySelector("#create-oauth-client").disabled = true;
   document.querySelector("#new-key-notice").hidden = true;
   try {
     const response = await api(`/v1/projects/${encodeURIComponent(projectID)}/environments`, {
@@ -423,6 +469,7 @@ async function selectProject(projectID) {
     else {
       state.environment = null;
       addEmptyMessage(document.querySelector("#key-list"), "Choose an environment.");
+      addEmptyMessage(document.querySelector("#oauth-client-list"), "Choose an environment.");
     }
   } catch (error) {
     handleError(notice, error);
@@ -437,16 +484,33 @@ async function selectEnvironment(environmentID) {
   document.querySelector("#new-key-notice").hidden = true;
   saveSession();
   document.querySelector("#issue-key").disabled = false;
+  document.querySelector("#create-oauth-client").disabled = false;
   try {
-    const response = await api(`/v1/environments/${encodeURIComponent(environmentID)}/api-keys`, {
-      method: "GET",
-      authenticated: true,
-    });
-    const keys = Array.isArray(response.keys) ? response.keys : [];
+    const [keyResponse, clientResponse] = await Promise.all([
+      api(`/v1/environments/${encodeURIComponent(environmentID)}/api-keys`, {
+        method: "GET",
+        authenticated: true,
+      }),
+      api(`/v1/environments/${encodeURIComponent(environmentID)}/oauth-clients`, {
+        method: "GET",
+        authenticated: true,
+      }),
+    ]);
+    const keys = Array.isArray(keyResponse.keys) ? keyResponse.keys : [];
     if (!keys.every((item) => typeof item.id === "string" && typeof item.prefix === "string" && typeof item.status === "string")) {
       throw new Error("AuthForge returned an unexpected API key list.");
     }
+    const clients = Array.isArray(clientResponse.clients) ? clientResponse.clients : [];
+    if (!clients.every((item) =>
+      typeof item.client_id === "string" &&
+      typeof item.name === "string" &&
+      Array.isArray(item.redirect_uris) &&
+      item.redirect_uris.every((uri) => typeof uri === "string")
+    )) {
+      throw new Error("AuthForge returned an unexpected OAuth client list.");
+    }
     renderKeyRows(keys);
+    renderOAuthClientRows(clients);
   } catch (error) {
     handleError(notice, error);
   }
@@ -457,6 +521,20 @@ async function revokeAPIKey(keyID, prefix) {
   const notice = document.querySelector("#workspace-notice");
   try {
     await api(`/v1/api-keys/${encodeURIComponent(keyID)}`, {
+      method: "DELETE",
+      authenticated: true,
+    });
+    await selectEnvironment(state.selectedEnvironmentID);
+  } catch (error) {
+    handleError(notice, error);
+  }
+}
+
+async function deleteOAuthClient(clientID, name) {
+  if (!window.confirm(`Delete OAuth client “${name}”? Sign-in requests for this client will stop working.`)) return;
+  const notice = document.querySelector("#workspace-notice");
+  try {
+    await api(`/v1/oauth-clients/${encodeURIComponent(clientID)}`, {
       method: "DELETE",
       authenticated: true,
     });
@@ -483,6 +561,76 @@ function handleError(element, error) {
 
 document.querySelector("#signup-tab").addEventListener("click", () => switchAuthMode("signup"));
 document.querySelector("#login-tab").addEventListener("click", () => switchAuthMode("login"));
+
+document.querySelector("#forgot-password").addEventListener("click", () => {
+  const email = authForm.elements.email.value.trim();
+  document.querySelector(".mode-switch").hidden = true;
+  authForm.hidden = true;
+  document.querySelector("#forgot-password").hidden = true;
+  resetRequestForm.hidden = false;
+  resetRequestForm.elements.email.value = email;
+  document.querySelector("#auth-title").textContent = "Reset your password";
+  document.querySelector("#auth-description").textContent = "We’ll email you a secure link if an account exists for that address.";
+  clearNotice(authNotice);
+  clearNotice(resetRequestNotice);
+});
+
+document.querySelector("#back-to-login").addEventListener("click", () => {
+  authForm.elements.email.value = resetRequestForm.elements.email.value;
+  switchAuthMode("login");
+});
+
+resetRequestForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearNotice(resetRequestNotice);
+  setBusy(resetRequestForm, true, "Sending reset link…");
+  try {
+    await api("/v1/password-reset/request", {
+      body: { email: String(new FormData(resetRequestForm).get("email")).trim() },
+    });
+    showNotice(resetRequestNotice, "If an account exists for that address, a password reset link has been sent.");
+  } catch (error) {
+    handleError(resetRequestNotice, error);
+  } finally {
+    setBusy(resetRequestForm, false);
+  }
+});
+
+resetPasswordForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const notice = document.querySelector("#password-reset-notice");
+  clearNotice(notice);
+  const values = new FormData(resetPasswordForm);
+  const password = String(values.get("password"));
+  if (password !== String(values.get("confirm-password"))) {
+    showNotice(notice, "The passwords don’t match.");
+    return;
+  }
+  const token = new URLSearchParams(window.location.search).get("token");
+  if (!token) {
+    showNotice(notice, "This reset link is missing its token. Request a new password reset link.");
+    return;
+  }
+  setBusy(resetPasswordForm, true, "Resetting password…");
+  try {
+    const result = await api("/v1/password-reset/confirm", {
+      body: { reset_token: token, password },
+    });
+    if (result.ok !== true) throw new Error("AuthForge could not reset the password. Request a new link and try again.");
+    window.history.replaceState(null, "", "/reset-password");
+    sessionStorage.removeItem("authforge-console");
+    resetPasswordForm.reset();
+    resetPasswordForm.hidden = true;
+    document.querySelector("#reset-sign-in").textContent = "Sign in with your new password";
+    showNotice(notice, "Your password has been reset. You can now sign in with your new password.");
+    notice.classList.add("notice-success");
+    document.querySelector("#reset-sign-in").focus();
+  } catch (error) {
+    handleError(notice, error);
+  } finally {
+    setBusy(resetPasswordForm, false);
+  }
+});
 
 authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -676,6 +824,37 @@ document.querySelector("#issue-key").addEventListener("click", async () => {
   }
 });
 
+document.querySelector("#oauth-client-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const notice = document.querySelector("#workspace-notice");
+  clearNotice(notice);
+  const values = new FormData(form);
+  const redirectURIs = String(values.get("redirect_uris"))
+    .split(/\r?\n/)
+    .map((uri) => uri.trim())
+    .filter(Boolean);
+  setBusy(form, true, "Registering…");
+  try {
+    await api("/v1/oauth-clients", {
+      body: {
+        environment_id: state.selectedEnvironmentID,
+        name: String(values.get("name")).trim(),
+        redirect_uris: redirectURIs,
+      },
+      authenticated: true,
+    });
+    form.reset();
+    await selectEnvironment(state.selectedEnvironmentID);
+    showNotice(notice, "OAuth client registered. Keep its exact callback URL list up to date.");
+    notice.classList.add("notice-success");
+  } catch (error) {
+    handleError(notice, error);
+  } finally {
+    setBusy(form, false);
+  }
+});
+
 document.querySelector("#copy-new-key").addEventListener("click", async () => {
   const notice = document.querySelector("#workspace-notice");
   try {
@@ -712,8 +891,301 @@ document.querySelector("#logout-button").addEventListener("click", () => {
   switchAuthMode("login");
 });
 
+function setHostedAuthMode(mode) {
+  const signup = mode === "signup";
+  const loginTab = document.querySelector("#hosted-login-tab");
+  const signupTab = document.querySelector("#hosted-signup-tab");
+  loginTab.classList.toggle("is-active", !signup);
+  loginTab.setAttribute("aria-selected", String(!signup));
+  signupTab.classList.toggle("is-active", signup);
+  signupTab.setAttribute("aria-selected", String(signup));
+  document.querySelector("#hosted-auth-form").elements.action.value = signup ? "signup" : "login";
+  document.querySelector("#hosted-auth-form").elements.password.autocomplete = signup ? "new-password" : "current-password";
+  document.querySelector("#hosted-auth-submit").textContent = signup ? "Create account" : "Continue";
+}
+
+function initializeHostedAuthorization() {
+  const form = document.querySelector("#hosted-auth-form");
+  const params = new URLSearchParams(window.location.search);
+  for (const name of [
+    "client_id", "redirect_uri", "response_type", "scope",
+    "state", "code_challenge", "code_challenge_method",
+  ]) {
+    const value = params.get(name);
+    if (!value) {
+      showNotice(document.querySelector("#hosted-auth-notice"), "This sign-in request is incomplete. Return to your application and try again.");
+      form.hidden = true;
+      return;
+    }
+    form.elements[name].value = value;
+  }
+  form.elements.nonce.value = params.get("nonce") ?? "";
+  form.elements.nonce.disabled = !params.has("nonce");
+  document.querySelector("#hosted-login-tab").addEventListener("click", () => setHostedAuthMode("login"));
+  document.querySelector("#hosted-signup-tab").addEventListener("click", () => setHostedAuthMode("signup"));
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const notice = document.querySelector("#hosted-auth-notice");
+    clearNotice(notice);
+    setBusy(form, true, "Please wait…");
+    try {
+      const response = await fetch("/v1/authorize", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams(new FormData(form)),
+      });
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error("AuthForge returned an unreadable response. Please try again.");
+      }
+      if (!response.ok) {
+        const code = typeof result.error === "string" ? result.error : "internal";
+        throw new Error(errorMessages[code] ?? `Something went wrong (${code}). Please try again.`);
+      }
+      if (typeof result.redirect_url !== "string") {
+        throw new Error("AuthForge returned an unexpected response. Please try again.");
+      }
+      window.location.assign(result.redirect_url);
+    } catch (error) {
+      handleError(notice, error);
+    } finally {
+      setBusy(form, false);
+    }
+  });
+}
+
+const demoSession = {
+  email: "",
+  tokens: null,
+};
+
+function demoNotice(message, success = false) {
+  const notice = document.querySelector("#demo-notice");
+  showNotice(notice, message);
+  notice.classList.toggle("notice-success", success);
+}
+
+function demoKey() {
+  const key = document.querySelector("#demo-api-key").value.trim();
+  if (!key) throw new Error("Enter a development publishable key from your workspace.");
+  if (!key.startsWith("af_test_pk_")) {
+    throw new Error("For safety, this demo accepts development publishable keys only.");
+  }
+  return key;
+}
+
+async function demoRequest(path, { method = "POST", body, accessToken, includeKey = true } = {}) {
+  const headers = { Accept: "application/json" };
+  if (includeKey) headers["X-Api-Key"] = demoKey();
+  if (body) headers["Content-Type"] = "application/json";
+  if (accessToken) headers.Authorization = ["Bearer", accessToken].join(" ");
+  let response;
+  try {
+    response = await fetch(path, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw new Error("Couldn’t reach AuthForge. Check the development stack and try again.");
+  }
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("AuthForge returned an unreadable response.");
+  }
+  if (!response.ok) {
+    const code = typeof result.error === "string" ? result.error : "request_failed";
+    if (code === "rate_limited") throw new Error("Too many attempts. Wait before trying again.");
+    throw new Error(`AuthForge request failed (${code}).`);
+  }
+  if (typeof result !== "object" || result === null || Array.isArray(result)) {
+    throw new Error("AuthForge returned an unexpected response.");
+  }
+  return result;
+}
+
+function renderDemoSession() {
+  const panel = document.querySelector("#demo-session");
+  const status = document.querySelector("#demo-verification-status");
+  const tokens = demoSession.tokens;
+  panel.hidden = !tokens;
+  if (!tokens) return;
+  status.textContent = tokens.email_verified ? "Email verified" : "Email not verified";
+  status.classList.toggle("revoked", !tokens.email_verified);
+  document.querySelector("#demo-resend-verification").hidden = tokens.email_verified;
+  document.querySelector("#demo-user").textContent = JSON.stringify({
+    email: demoSession.email,
+    user_id: tokens.user_id,
+    expires_at: new Date(tokens.expires_at * 1000).toISOString(),
+    email_verified: tokens.email_verified,
+  }, null, 2);
+}
+
+async function demoAuthenticate(form, path, label) {
+  const notice = document.querySelector("#demo-notice");
+  clearNotice(notice);
+  const values = new FormData(form);
+  const email = String(values.get("email")).trim();
+  setBusy(form, true, label);
+  try {
+    demoSession.tokens = await demoRequest(path, {
+      body: { email, password: String(values.get("password")) },
+    });
+    demoSession.email = email;
+    renderDemoSession();
+    demoNotice(
+      demoSession.tokens.email_verified
+        ? "Signed in. Your email is verified."
+        : "Signed in. Check your email for the verification link.",
+      true,
+    );
+  } catch (error) {
+    handleError(notice, error);
+  } finally {
+    setBusy(form, false);
+  }
+}
+
+document.querySelector("#demo-signup-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  demoAuthenticate(event.currentTarget, "/v1/signup", "Creating account…");
+});
+
+document.querySelector("#demo-login-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  demoAuthenticate(event.currentTarget, "/v1/login", "Signing in…");
+});
+
+document.querySelector("#demo-resend-verification").addEventListener("click", async () => {
+  const notice = document.querySelector("#demo-notice");
+  clearNotice(notice);
+  try {
+    if (!demoSession.tokens) throw new Error("Sign in first to resend a verification email.");
+    await demoRequest("/v1/email/verification/request", {
+      body: { email: demoSession.email },
+    });
+    demoNotice("If the account needs verification, a fresh link has been sent.", true);
+  } catch (error) {
+    handleError(notice, error);
+  }
+});
+
+document.querySelector("#demo-current-user").addEventListener("click", async () => {
+  const notice = document.querySelector("#demo-notice");
+  clearNotice(notice);
+  try {
+    if (!demoSession.tokens) throw new Error("Sign in first to load the current user.");
+    const user = await demoRequest("/v1/me", {
+      method: "GET",
+      includeKey: false,
+      accessToken: demoSession.tokens.access_token,
+    });
+    document.querySelector("#demo-user").textContent = JSON.stringify(user, null, 2);
+    demoNotice("Current user loaded.", true);
+  } catch (error) {
+    handleError(notice, error);
+  }
+});
+
+document.querySelector("#demo-refresh").addEventListener("click", async () => {
+  const notice = document.querySelector("#demo-notice");
+  clearNotice(notice);
+  try {
+    if (!demoSession.tokens) throw new Error("Sign in first to refresh the session.");
+    demoSession.tokens = await demoRequest("/v1/token/refresh", {
+      body: { refresh_token: demoSession.tokens.refresh_token },
+      includeKey: false,
+    });
+    renderDemoSession();
+    demoNotice("Session refreshed. The previous refresh token can no longer be reused.", true);
+  } catch (error) {
+    handleError(notice, error);
+  }
+});
+
+document.querySelector("#demo-logout").addEventListener("click", async () => {
+  const notice = document.querySelector("#demo-notice");
+  clearNotice(notice);
+  try {
+    if (!demoSession.tokens) throw new Error("There is no active session to log out.");
+    await demoRequest("/v1/logout", {
+      body: { refresh_token: demoSession.tokens.refresh_token },
+      includeKey: false,
+    });
+    demoSession.tokens = null;
+    demoSession.email = "";
+    renderDemoSession();
+    demoNotice("You have been logged out.", true);
+  } catch (error) {
+    handleError(notice, error);
+  }
+});
+
 restoreSession();
-if (state.accessToken && state.account && state.step === "workspace") {
+if (window.location.pathname === "/authorize") {
+  document.querySelector("#auth-view").hidden = true;
+  document.querySelector("#setup-view").hidden = true;
+  document.querySelector("#workspace-view").hidden = true;
+  document.querySelector("#reset-password-view").hidden = true;
+  document.querySelector("#verify-email-view").hidden = true;
+  document.querySelector("#demo-view").hidden = true;
+  document.querySelector("#hosted-auth-view").hidden = false;
+  accountBar.hidden = true;
+  initializeHostedAuthorization();
+} else if (window.location.pathname === "/reset-password") {
+  document.querySelector("#auth-view").hidden = true;
+  document.querySelector("#setup-view").hidden = true;
+  document.querySelector("#workspace-view").hidden = true;
+  document.querySelector("#reset-password-view").hidden = false;
+  accountBar.hidden = true;
+  if (!new URLSearchParams(window.location.search).get("token")) {
+    resetPasswordForm.hidden = true;
+    showNotice(
+      document.querySelector("#password-reset-notice"),
+      "This reset link is missing its token. Request a new password reset link.",
+    );
+  }
+} else if (window.location.pathname === "/verify-email") {
+  document.querySelector("#auth-view").hidden = true;
+  document.querySelector("#setup-view").hidden = true;
+  document.querySelector("#workspace-view").hidden = true;
+  document.querySelector("#reset-password-view").hidden = true;
+  document.querySelector("#verify-email-view").hidden = false;
+  accountBar.hidden = true;
+  const params = new URLSearchParams(window.location.search);
+  const environmentID = params.get("environment_id");
+  const verificationToken = params.get("token");
+  const notice = document.querySelector("#verify-email-notice");
+  if (!environmentID || !verificationToken) {
+    showNotice(notice, "This verification link is incomplete. Request a new verification email from your application.");
+  } else {
+    api("/v1/email/verification/confirm", {
+      body: { environment_id: environmentID, token: verificationToken },
+    }).then((result) => {
+      if (result.verified !== true) throw new Error("AuthForge could not verify this email.");
+      window.history.replaceState(null, "", "/verify-email");
+      showNotice(notice, "Your email is verified. Return to your application and sign in again.", true);
+      notice.setAttribute("role", "status");
+    }).catch((error) => {
+      handleError(notice, error);
+    });
+  }
+} else if (window.location.pathname === "/demo") {
+  document.querySelector("#auth-view").hidden = true;
+  document.querySelector("#setup-view").hidden = true;
+  document.querySelector("#workspace-view").hidden = true;
+  document.querySelector("#reset-password-view").hidden = true;
+  document.querySelector("#verify-email-view").hidden = true;
+  document.querySelector("#demo-view").hidden = false;
+  accountBar.hidden = true;
+} else if (state.accessToken && state.account && state.step === "workspace") {
   showWorkspaceView();
   loadOrganizations();
 } else if (state.accessToken && state.account) renderStep();

@@ -12,7 +12,15 @@ docker compose up --build
 
 The gateway is at `http://localhost:8080`. Postgres is published on `localhost:5432` for local inspection. The gRPC services are only on the Compose network.
 Local password-reset and email-verification messages are captured by Mailpit at `http://localhost:8025`.
-Open `http://localhost:8080` for the developer console to create an account, organization, project, environment, and publishable API key.
+Open `http://localhost:8080` for the developer console to create an account, organization, project, environment, and publishable API key. Open `http://localhost:8080/demo` to try application signup, login, verification, refresh, and logout with a development key.
+
+## Developer preview
+
+This is a self-hosted developer preview, not a production-ready hosted service. The Compose defaults use development credentials and local Mailpit; Google sign-in needs a platform `GOOGLE_CLIENT_ID`. The console currently supports a single developer account and does not provide team invitations or roles. Before exposing a deployment to real users, configure HTTPS, production secrets and SMTP, backups, and appropriate network/security controls.
+
+The gateway now supports hosted OpenID Connect password sign-in/signup using authorization code + PKCE. Register an OAuth client and exact HTTPS callback URLs in the console, then use the discovery document at `/.well-known/openid-configuration`; see the [API guide](./docs/api.md#hosted-openid-connect) for the authorize and token requests. The first hosted screen supports email/password; social sign-in and userinfo are not included yet.
+
+The in-browser developer demo is deliberately limited to `af_test_pk_` keys and keeps the application key and tokens in page memory only. Use it to explore the application API, not as your application. For an integration, use the [TypeScript SDK](./sdk/typescript/README.md) or call the API from your own server/client.
 
 The signing seed in `docker-compose.yml` is a development key. It is not a production secret.
 Google sign-in is disabled unless `GOOGLE_CLIENT_ID` is configured for the platform-owned Google Identity Services app.
@@ -31,7 +39,7 @@ Use the returned console token as `Authorization: Bearer ...` for `/v1/organizat
 
 ## Password reset
 
-Console accounts can request a password reset email through the gateway. The request response is generic and never includes the token. In the local Compose stack, open Mailpit at `http://localhost:8025` to retrieve the message. The link base is configured with `RESET_PASSWORD_URL`; in production, point it at the console UI over HTTPS. This repo does not include that UI yet—the page should read the link's `token` query parameter and submit it to the confirm endpoint.
+Console accounts can request a password reset from the sign-in screen. The request response is generic and never reveals whether an account exists. In the local Compose stack, open Mailpit at `http://localhost:8025` to retrieve the message; its reset link opens the console at `http://localhost:8080/reset-password`. The page submits the link's `token` query parameter to the confirm endpoint. Set `RESET_PASSWORD_URL` to the console reset page over HTTPS in production.
 
 ```bash
 curl -s -X POST localhost:8080/v1/password-reset/request -H "content-type: application/json" -d "{\"email\":\"ada@campus.edu\"}"
@@ -40,13 +48,13 @@ curl -s -X POST localhost:8080/v1/password-reset/confirm -H "content-type: appli
 
 ## Email verification
 
-Application signup sends a verification email. For local development, open Mailpit at `http://localhost:8025`; the configured link points at `http://localhost:3000/verify-email`, which a frontend must implement. The page should submit the link's `environment_id` and `token` to the gateway:
+Application signup sends a verification email. For local development, open Mailpit at `http://localhost:8025`; the link opens the hosted verification page at `http://localhost:8080/verify-email`, which confirms the link's `environment_id` and `token` with the gateway. The developer demo can also request a fresh verification link. Applications can alternatively implement their own verification page:
 
 ```bash
 curl -s -X POST localhost:8080/v1/email/verification/confirm -H "content-type: application/json" -d "{\"environment_id\":\"<uuid>\",\"token\":\"af_ev_...\"}"
 ```
 
-To resend a verification link, send `POST /v1/email/verification/request` with the environment API key and `{"email":"student@campus.edu"}`.
+To resend a verification link, the developer demo has a resend button, or send `POST /v1/email/verification/request` with the environment API key and `{"email":"student@campus.edu"}`.
 
 ## Google sign-in
 
@@ -57,7 +65,7 @@ curl -s -X POST localhost:8080/v1/oauth/google/nonce -H "X-Api-Key: <environment
 curl -s -X POST localhost:8080/v1/oauth/google -H "X-Api-Key: <environment-key>" -H "content-type: application/json" -d "{\"id_token\":\"<google-id-token>\",\"nonce\":\"<nonce-from-first-call>\"}"
 ```
 
-Google credentials are validated against the configured client ID and Google's OIDC issuer. Only Google-verified email addresses are accepted. Nonces expire after five minutes and can be exchanged once. Google accounts are linked to an existing application user with the same verified email, or create a new verified user. The browser/client UI is not included yet.
+Google credentials are validated against the configured client ID and Google's OIDC issuer. Only Google-verified email addresses are accepted. Nonces expire after five minutes and can be exchanged once. Google accounts are linked to an existing application user with the same verified email, or create a new verified user. Google sign-in is available through the TypeScript SDK; the self-hosted demo currently covers password-based flows.
 
 ## Tests
 

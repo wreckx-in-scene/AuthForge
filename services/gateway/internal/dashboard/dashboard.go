@@ -23,11 +23,20 @@ func Handler() http.Handler {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+	serveIndex := func(w http.ResponseWriter, r *http.Request) {
 		setHeaders(w)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(index)
+	}
+	mux.HandleFunc("GET /{$}", serveIndex)
+	mux.HandleFunc("GET /{page}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.PathValue("page") {
+		case "reset-password", "verify-email", "demo", "authorize":
+			serveIndex(w, r)
+		default:
+			http.NotFound(w, r)
+		}
 	})
 	mux.HandleFunc("GET /assets/{asset}", func(w http.ResponseWriter, r *http.Request) {
 		asset := path.Clean(r.PathValue("asset"))

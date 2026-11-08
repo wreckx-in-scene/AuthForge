@@ -186,6 +186,100 @@ func (s *Server) GoogleLogin(ctx context.Context, req *authv1.GoogleLoginRequest
 	}, nil
 }
 
+func (s *Server) Authorize(ctx context.Context, req *authv1.AuthorizeRequest) (*authv1.AuthorizeResponse, error) {
+	var user *identityv1.User
+	if req.GetSignup() {
+		created, err := s.identity.CreateUser(ctx, &identityv1.CreateUserRequest{
+			EnvironmentId: req.GetEnvironmentId(),
+			ProjectId:     req.GetProjectId(),
+			Email:         req.GetEmail(),
+			Password:      req.GetPassword(),
+		})
+		if err != nil {
+			return nil, s.pass(err)
+		}
+		user = created.GetUser()
+	} else {
+		authed, err := s.identity.Authenticate(ctx, &identityv1.AuthenticateRequest{
+			EnvironmentId: req.GetEnvironmentId(),
+			Email:         req.GetEmail(),
+			Password:      req.GetPassword(),
+		})
+		if err != nil {
+			return nil, s.pass(err)
+		}
+		user = authed.GetUser()
+	}
+	if user.GetEnvironmentId() != req.GetEnvironmentId() || user.GetProjectId() != req.GetProjectId() {
+		return nil, status.Error(codes.PermissionDenied, "forbidden")
+	}
+	if user.GetStatus() != "active" {
+		return nil, status.Error(codes.PermissionDenied, "account_disabled")
+	}
+	issued, err := s.session.IssueAuthorizationCode(ctx, &sessionv1.IssueAuthorizationCodeRequest{
+		EnvironmentId: req.GetEnvironmentId(), ProjectId: req.GetProjectId(),
+		UserId: user.GetId(), ClientId: req.GetClientId(), RedirectUri: req.GetRedirectUri(),
+		CodeChallenge: req.GetCodeChallenge(), Nonce: req.GetNonce(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	return &authv1.AuthorizeResponse{Code: issued.GetCode(), ExpiresAt: issued.GetExpiresAt()}, nil
+}
+
+func (s *Server) ExchangeAuthorizationCode(ctx context.Context, req *authv1.ExchangeAuthorizationCodeRequest) (*authv1.ExchangeAuthorizationCodeResponse, error) {
+	issued, err := s.session.ExchangeAuthorizationCode(ctx, &sessionv1.ExchangeAuthorizationCodeRequest{
+		Code: req.GetCode(), ClientId: req.GetClientId(),
+		RedirectUri: req.GetRedirectUri(), CodeVerifier: req.GetCodeVerifier(),
+	})
+	if err != nil {
+		return nil, s.pass(err)
+	}
+	loaded, err := s.identity.GetUser(ctx, &identityv1.GetUserRequest{
+		EnvironmentId: issued.GetEnvironmentId(), UserId: issued.GetUserId(),
+	})
+	if err != nil {
+		s.revokeFailedAuthorizationExchange(ctx, issued.GetSessionId(), issued.GetEnvironmentId(), err)
+		return nil, s.pass(err)
+	}
+	user := loaded.GetUser()
+	if user.GetStatus() != "active" || user.GetEnvironmentId() != issued.GetEnvironmentId() ||
+		user.GetProjectId() != issued.GetProjectId() {
+		s.revokeFailedAuthorizationExchange(ctx, issued.GetSessionId(), issued.GetEnvironmentId(), nil)
+		return nil, status.Error(codes.PermissionDenied, "account_disabled")
+	}
+	now := now()
+	access, accessExpires, err := s.signer.SignAccess(
+		user.GetId(), user.GetEnvironmentId(), user.GetProjectId(), issued.GetSessionId(),
+		user.GetEmailVerified(), now,
+	)
+	if err != nil {
+		s.revokeFailedAuthorizationExchange(ctx, issued.GetSessionId(), issued.GetEnvironmentId(), err)
+		return nil, status.Error(codes.Internal, "internal")
+	}
+	idToken, _, err := s.signer.SignIDToken(
+		user.GetId(), req.GetClientId(), user.GetEmail(), issued.GetNonce(),
+		user.GetEmailVerified(), now,
+	)
+	if err != nil {
+		s.revokeFailedAuthorizationExchange(ctx, issued.GetSessionId(), issued.GetEnvironmentId(), err)
+		return nil, status.Error(codes.Internal, "internal")
+	}
+	return &authv1.ExchangeAuthorizationCodeResponse{
+		AccessToken: access, RefreshToken: issued.GetRefreshToken(), IdToken: idToken,
+		AccessExpiresAt: accessExpires.Unix(), UserId: user.GetId(),
+		SessionId: issued.GetSessionId(), EmailVerified: user.GetEmailVerified(),
+	}, nil
+}
+
+func (s *Server) revokeFailedAuthorizationExchange(ctx context.Context, sessionID, environmentID string, cause error) {
+	_, revokeErr := s.session.RevokeSession(ctx, &sessionv1.RevokeSessionRequest{
+		SessionId: sessionID, EnvironmentId: environmentID,
+	})
+	s.log.Error("authorization code exchange failed after session creation",
+		"session_id", sessionID, "cause", cause, "revoke_err", revokeErr)
+}
+
 func (s *Server) VerificationKeys(context.Context, *authv1.VerificationKeysRequest) (*authv1.VerificationKeysResponse, error) {
 	return &authv1.VerificationKeysResponse{
 		Kid:       s.signer.KID(),

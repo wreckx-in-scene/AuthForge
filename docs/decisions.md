@@ -110,20 +110,20 @@ Tradeoff. A bad import can reach into another service's store package. The bound
 
 Migrations are not run automatically by every replica. Two containers applying the same migration is a problem the one-shot job avoids. The cost is an extra Compose step that must finish before the services are healthy.
 
-## 11. What this milestone refuses to build
+## 11. The developer-preview boundary
 
 - Kafka and a transactional outbox. Nothing asynchronous has to be delivered yet.
 - A denylist of access-token ids. Short expiry is the revocation story for access tokens.
 - mTLS, Redis rate limits, and a JWKS HTTP document. The gateway already treats the auth service as the source of the verification key, which is the same relationship a JWKS URL will have.
-- Hosted login. The curl flow against the gateway is the contract those clients will wrap.
+- The hosted-login slice uses OpenID Connect authorization-code flow with PKCE; access and refresh tokens are never sent in redirect URLs. Social sign-in, userinfo, and broader scope/claim customization remain out of scope for this slice.
 
 ## 12. Google sign-in uses a verified ID-token exchange
 
 Decision. The MVP uses the platform-owned Google Identity Services client. The client requests a five-minute, single-use nonce through the environment API key, supplies it to Google, and exchanges the ID token and nonce through the gateway. Auth verifies the ID token using Google's OIDC discovery/JWKS, pins the configured client ID as audience, and requires Google's verified-email claim. Identity binds the Google subject to a user scoped to the same environment.
 
-Alternative. A server-side authorization-code redirect flow with per-project client credentials. That requires redirect URI management, PKCE/state handling, credential storage, and project configuration that the current console does not have.
+Alternative. A hosted authorization-code flow that delegates sign-in to Google. The current platform-owned Google ID-token exchange remains available to applications that build their own sign-in UI.
 
-Tradeoff. The current endpoint supports clients that can use Google Identity Services, not a hosted redirect flow. A Google subject is linked to an existing user only when the verified email matches; the provider subject, not email, is the stable login identifier after linking. One-time nonces prevent replay of a previously exchanged ID token.
+Tradeoff. The existing Google endpoint supports clients that can use Google Identity Services; it is not itself a hosted redirect flow. A Google subject is linked to an existing user only when the verified email matches; the provider subject, not email, is the stable login identifier after linking. One-time nonces prevent replay of a previously exchanged ID token.
 
 ## 13. The TypeScript SDK wraps the application API
 
@@ -139,4 +139,4 @@ Decision. The gateway serves a same-origin, dependency-free console for account 
 
 Alternative. Add a separately deployed frontend and cross-origin API configuration before the console workflows are established.
 
-Tradeoff. The console ships with the existing Compose stack and avoids CORS configuration. It supports initial setup and management of existing organizations, projects, environments, and API keys. Key secrets are shown only at issuance; lists expose metadata only, and revocation is permanent.
+Tradeoff. The console ships with the existing Compose stack and avoids CORS configuration. It supports initial setup and management of organizations, projects, environments, API keys, and OAuth clients, as well as password recovery and the application email-verification landing page. OAuth clients hold the exact callback allow-lists used by hosted authorization. A same-origin developer demo exercises the password-based application API without storing keys or tokens. Key secrets are shown only at issuance; lists expose metadata only, and revocation is permanent. This remains a single-developer preview: team access and production deployment controls are out of scope.
