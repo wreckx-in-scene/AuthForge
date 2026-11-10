@@ -78,7 +78,7 @@ services:
     environment:
       ISSUER: https://${AUTHFORGE_DOMAIN:?Set AUTHFORGE_DOMAIN in .env.beta}
       CONSOLE_TOKEN_SECRET: ${CONSOLE_TOKEN_SECRET:?Set CONSOLE_TOKEN_SECRET in .env.beta}
-      CONSOLE_INVITE_CODE: 
+      CONSOLE_INVITE_CODE: ${CONSOLE_INVITE_CODE:?Set CONSOLE_INVITE_CODE in .env.beta}
     ports: !reset []
 
   caddy:

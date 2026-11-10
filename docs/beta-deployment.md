@@ -3,9 +3,8 @@
 This deployment runs the existing Compose services on **one Linux VM** behind
 Caddy-managed HTTPS. It is suitable only for a small, manually coordinated
 preview where users understand that there is no service-level guarantee. It is
-not production-ready or high-availability. Console signup is currently open to
-anyone who can reach the host, so this setup does not enforce invite-only
-access.
+not production-ready or high-availability. Developer console signup is gated
+by a shared beta invite code configured on the gateway.
 
 The Docker Compose files do not create a cloud account or guarantee a free
 host. Choose a provider's currently available free compute tier or a machine
@@ -27,8 +26,9 @@ enough persistent disk for PostgreSQL, and a DNS name pointed at that IP.
 - Confirm the provider's data-retention and backup behavior before onboarding
   users. Make and test encrypted database backups before launch.
 - To restrict developer console signup to invited testers, set CONSOLE_INVITE_CODE
-  in .env.beta. Only users with the matching invite code will be permitted to create
-  a console account.
+  in `.env.beta`. Generate a long random code, require testers to enter it when
+  creating a console account, and share it privately. This is a shared code,
+  not an individual, expiring invitation.
 
 On a Linux host with Docker Compose v2:
 
@@ -39,10 +39,12 @@ openssl rand -hex 32
 openssl rand -base64 32
 ```
 
+Generate another `openssl rand -hex 32` value for `CONSOLE_INVITE_CODE`.
 Paste distinct generated values into the password/secret fields. Use a
 base64-encoded 32-byte value for `SIGNING_SEED`; use a different random secret
-for `CONSOLE_TOKEN_SECRET`. Set a real SMTP address and sender. Then validate
-the merged configuration without printing secret values:
+for `CONSOLE_TOKEN_SECRET`. Set a real SMTP address and sender. The Compose
+configuration fails validation if `CONSOLE_INVITE_CODE` is unset or empty.
+Then validate the merged configuration without printing secret values:
 
 ```bash
 docker compose --env-file .env.beta \
@@ -91,8 +93,8 @@ policies.
 - Compose's rate limiter is process-local and resets on gateway restart.
 - Internal gRPC is plaintext on the private Compose network.
 - The application has no automated backup scheduler or restore workflow.
-- Console signup is open to anyone who can reach the public host; there is no
-  invite or allowlist feature.
+- The console uses one shared signup code; it does not support individual
+  invitations, expiration, or per-invite usage limits.
 - Console accounts have no team invitations or role management.
 - Email verification does not block initial login; applications must check
   `email_verified` where their policy requires verified email.

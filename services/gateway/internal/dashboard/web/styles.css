@@ -1,34 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   color-scheme: dark;
-  --bg-base: #080c14;
-  --bg-subtle: #0d1320;
-  --bg-surface: #121929;
-  --bg-card: #151f33;
-  --bg-card-hover: #1a2740;
-  --border: rgba(255, 255, 255, 0.09);
-  --border-hover: rgba(255, 255, 255, 0.18);
+  --bg-base: #060911;
+  --bg-subtle: #0b0f1a;
+  --bg-surface: #0f1623;
+  --bg-card: #131c2e;
+  --bg-card-hover: #18243a;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.15);
   --border-focus: #6366f1;
 
   --primary: #6366f1;
   --primary-hover: #4f46e5;
-  --primary-glow: rgba(99, 102, 241, 0.35);
-  --primary-soft: rgba(99, 102, 241, 0.12);
+  --primary-glow: rgba(99, 102, 241, 0.3);
+  --primary-soft: rgba(99, 102, 241, 0.1);
 
   --emerald: #10b981;
-  --emerald-soft: rgba(16, 185, 129, 0.15);
-  --emerald-border: rgba(16, 185, 129, 0.3);
+  --emerald-soft: rgba(16, 185, 129, 0.12);
+  --emerald-border: rgba(16, 185, 129, 0.25);
   --rose: #f43f5e;
-  --rose-soft: rgba(244, 63, 94, 0.15);
-  --rose-border: rgba(244, 63, 94, 0.3);
+  --rose-soft: rgba(244, 63, 94, 0.12);
+  --rose-border: rgba(244, 63, 94, 0.25);
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #8892a4;
+  --text-muted: #4f5a6e;
 
-  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 380ms;
 }
 
 * {
@@ -91,30 +99,45 @@ button {
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   width: fit-content;
   color: #fff;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.6px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
   text-decoration: none;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.brand:hover {
+  opacity: 0.85;
 }
 
 .brand-mark {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  font-size: 19px;
-  font-weight: 800;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #1e1f3a 0%, #12132a 100%);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-spring);
 }
 
-.brand-light {
-  color: #a5b4fc;
+.brand:hover .brand-mark {
+  box-shadow: 0 0 28px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: rotate(-4deg) scale(1.06);
+}
+
+.brand-name {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #e8eaf6;
+}
+
+.brand-forge {
+  color: #818cf8;
   font-weight: 600;
 }
 
@@ -298,7 +321,9 @@ button {
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--bg-surface);
-  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: box-shadow var(--duration-slow) var(--ease-out),
+              border-color var(--duration-base) var(--ease-out);
 }
 
 .auth-card {
@@ -324,17 +349,22 @@ button {
   background: transparent;
   font-size: 13px;
   font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out),
+              transform var(--duration-fast) var(--ease-spring);
 }
 
 .mode-tab:hover {
   color: var(--text-secondary);
+  transform: translateY(-1px);
 }
 
 .mode-tab.is-active {
   color: #fff;
   background: var(--bg-card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: none;
 }
 
 /* Forms */
@@ -362,7 +392,14 @@ button {
   color: #fff;
   background: var(--bg-base);
   font-size: 14px;
-  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-spring);
+}
+
+.field input:hover:not(:focus), .field select:hover:not(:focus) {
+  border-color: var(--border-hover);
 }
 
 .field select {
@@ -395,8 +432,9 @@ button {
 
 .field input:focus, .field select:focus, .field textarea:focus {
   border-color: #818cf8;
-  background: #0c1220;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  background: rgba(10, 14, 28, 1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 1px 4px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
 }
 
 .field-hint {
@@ -412,13 +450,24 @@ button {
   min-height: 44px;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   padding: 0 18px;
   border: 1px solid transparent;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: -0.1px;
+  transition: transform var(--duration-fast) var(--ease-spring),
+              box-shadow var(--duration-base) var(--ease-out),
+              background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97) translateY(1px) !important;
+  transition-duration: 80ms;
 }
 
 .button:focus-visible, .mode-tab:focus-visible, .text-button:focus-visible {
@@ -434,17 +483,18 @@ button {
 .button-primary {
   color: #fff;
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .button-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #5558e8 0%, #4338ca 100%);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .button-primary:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.97) translateY(0);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
 .button-wide {
@@ -453,24 +503,27 @@ button {
 }
 
 .button-arrow {
-  font-size: 16px;
-  transition: transform 0.15s ease;
+  font-size: 15px;
+  display: inline-block;
+  transition: transform var(--duration-base) var(--ease-spring);
 }
 
 .button:hover .button-arrow {
-  transform: translateX(3px);
+  transform: translateX(5px);
 }
 
 .button-secondary {
-  color: #e2e8f0;
+  color: #c8d0e0;
   border-color: var(--border);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .button-secondary:hover:not(:disabled) {
   color: #fff;
   border-color: var(--border-hover);
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .button-quiet {
@@ -583,7 +636,13 @@ button {
   border: 1px solid transparent;
   border-radius: 12px;
   color: var(--text-muted);
-  transition: all 0.2s ease;
+  transition: background var(--duration-base) var(--ease-out),
+              border-color var(--duration-base) var(--ease-out),
+              transform var(--duration-fast) var(--ease-spring);
+}
+
+.step-item:hover {
+  transform: translateX(2px);
 }
 
 .step-number {
@@ -802,17 +861,21 @@ button {
 
 .text-button {
   width: fit-content;
-  padding: 6px 0;
+  padding: 6px 2px;
   border: 0;
   color: #818cf8;
   background: transparent;
   font-size: 13px;
   font-weight: 600;
+  text-underline-offset: 3px;
+  transition: color var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out);
 }
 
 .text-button:hover {
   color: #a5b4fc;
   text-decoration: underline;
+  opacity: 0.9;
 }
 
 .text-button:disabled {
@@ -1146,4 +1209,42 @@ button {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── Page entry animation ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-view,
+.setup-view,
+.demo-view,
+.workspace-view {
+  animation: fade-up 0.45s var(--ease-out) both;
+}
+
+.brand-copy {
+  animation: fade-up 0.55s 0.1s var(--ease-out) both;
+}
+
+/* ── Notice slide-in ── */
+@keyframes notice-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); max-height: 0; }
+  to   { opacity: 1; transform: translateY(0) scale(1); max-height: 200px; }
+}
+
+.notice:not([hidden]) {
+  animation: notice-in 0.3s var(--ease-out) both;
+}
+
+/* ── Resource list item hover ── */
+.resource-item {
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-spring) !important;
+}
+
+.resource-item:hover {
+  transform: translateX(2px);
 }

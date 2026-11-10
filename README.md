@@ -2,90 +2,73 @@
 
 ![CI](https://github.com/wreckx-in-scene/AuthForge/actions/workflows/ci.yml/badge.svg)
 
-AuthForge is a self-hosted developer preview of multi-tenant authentication infrastructure. Developers create an organization, project, and environment, then either use the environment HTTP API or delegate application sign-in to AuthForge's hosted OpenID Connect flow. Internal services talk gRPC.
+AuthForge is a self-hosted, multi-tenant authentication platform developer
+preview. It lets developers build an app's user authentication through an
+environment-scoped API—or delegate sign-in to AuthForge using hosted OpenID
+Connect (OIDC).
 
-## What it demonstrates
+## What it does
 
-- Five-service Go backend with a single public HTTP gateway and internal gRPC APIs.
-- Tenant-isolated developer workspaces and environment-scoped application users.
-- Password authentication, refresh-token rotation, email verification, password recovery, and optional Google sign-in.
-- Hosted OpenID Connect authorization-code flow with PKCE, one-use codes, EdDSA ID tokens, discovery, and JWKS.
-- TypeScript application API client and a runnable Node.js relying-party example.
-- PostgreSQL migrations, row-level security for identity/session data, rate limits, and automated tests.
+- Manages developer accounts, organizations, projects, environments, API keys,
+  and OAuth clients through a web console.
+- Provides application-user password signup/login, refresh-token rotation,
+  logout, email verification, and password recovery; Google sign-in is optional
+  and requires platform credentials.
+- Supports hosted OIDC password sign-in/signup with authorization code + PKCE,
+  one-use authorization codes, EdDSA ID tokens, discovery, and JWKS.
+- Includes Go and TypeScript SDKs, a browser API demo, and a runnable Node.js
+  OIDC relying-party example.
 
-This is a portfolio-quality, runnable developer preview—not a hosted or production-ready identity provider. See [production gaps and design constraints](./docs/architecture.md) and [API documentation](./docs/api.md).
+## Architecture
 
-For a small, controlled beta on a single VM, see the [beta deployment guide](./docs/beta-deployment.md). Console signup is open, so the guide explains the extra access-control needed for invited testers. It requires a domain and real SMTP credentials and assumes a free-tier VM or a machine you control; free-tier availability and billing vary. It is not high availability and should not be used for sensitive workloads.
+Five Go services run in Docker Compose. The gateway exposes the HTTP API,
+console, and OIDC endpoints; internal service communication uses gRPC.
 
-The design notes are in [docs/architecture.md](docs/architecture.md) and [docs/decisions.md](docs/decisions.md). The HTTP contract is in [docs/api.md](docs/api.md).
+```text
+Applications ── HTTPS/JSON ──> Gateway ── gRPC ──> Tenant
+                                  │
+                                  └── gRPC ──> Auth ── gRPC ──> Identity
+                                                 └──── gRPC ──> Session
 
-## Run
+Tenant, Identity, Session ── owned schemas ──> PostgreSQL
+```
+
+Tenant, application-user, and session data are separated by service-owned
+schemas. Application identity and session tables use PostgreSQL row-level
+security. Passwords are hashed with Argon2id; access and ID tokens are signed
+with EdDSA.
+
+## Run locally
+
+Requirements: Docker Compose v2.
 
 ```bash
 docker compose up --build
 ```
 
-The gateway is at `http://localhost:8080`. Postgres is published on `localhost:5432` for local inspection. The gRPC services are only on the Compose network.
-Local password-reset and email-verification messages are captured by Mailpit at `http://localhost:8025`.
-Open `http://localhost:8080` for the developer console to create an account, organization, project, environment, and publishable API key. Open `http://localhost:8080/demo` to try application signup, login, verification, refresh, and logout with a development key.
+- Console: [http://localhost:8080](http://localhost:8080)
+- Application API demo: [http://localhost:8080/demo](http://localhost:8080/demo)
+- Mailpit (local verification/reset emails): [http://localhost:8025](http://localhost:8025)
 
-## Developer preview
+The local Compose configuration uses development credentials and open console
+signup. Do not expose it to the internet.
 
-This is a self-hosted developer preview, not a production-ready hosted service. The Compose defaults use development credentials and local Mailpit; Google sign-in needs a platform `GOOGLE_CLIENT_ID`. The console currently supports a single developer account and does not provide team invitations or roles. Before exposing a deployment to real users, configure HTTPS, production secrets and SMTP, backups, and appropriate network/security controls.
+## Project scope
 
-The gateway now supports hosted OpenID Connect password sign-in/signup using authorization code + PKCE. Register an OAuth client and exact HTTPS callback URLs in the console, then use the discovery document at `/.well-known/openid-configuration`; see the [API guide](./docs/api.md#hosted-openid-connect) for the authorize and token requests. The first hosted screen supports email/password; social sign-in and userinfo are not included yet. A runnable [Node.js relying-party example](./examples/node-oidc/README.md) shows the complete hosted login, callback, token verification, session, refresh, and logout flow.
+This repository demonstrates end-to-end developer onboarding and application
+authentication, including a sample OIDC integration. It is a runnable
+developer preview—not a hosted or production-ready identity provider. The
+included beta deployment is a single-VM Compose setup, not highly available;
+it requires operator-provided infrastructure, HTTPS, secrets, and SMTP. The
+beta overlay supports a shared console signup code, not individual invitations.
 
-The in-browser developer demo is deliberately limited to `af_test_pk_` keys and keeps the application key and tokens in page memory only. Use it to explore the application API, not as your application. For an integration, use the [TypeScript SDK](./sdk/typescript/README.md) or call the API from your own server/client.
+Production use would additionally require operational safeguards such as
+managed/rotatable signing keys, authenticated service-to-service traffic,
+shared rate limiting, automated backups and restore drills, monitoring, and an
+independent security review. See [architecture and production gaps](docs/architecture.md)
+and the [beta deployment guide](docs/beta-deployment.md).
 
-The signing seed in `docker-compose.yml` is a development key. It is not a production secret.
-Google sign-in is disabled unless `GOOGLE_CLIENT_ID` is configured for the platform-owned Google Identity Services app.
-
-## Developer SDKs & Quickstart
-
-- **[Quickstart Guide](./docs/quickstart.md)**: 5-minute integration guide for React/Node, Go backends, and hosted OIDC.
-- **TypeScript SDK**: Framework-agnostic client in [sdk/typescript](./sdk/typescript). See its [usage guide](./sdk/typescript/README.md).
-- **Go SDK**: Zero-dependency Go client in [sdk/go](./sdk/go). See its [usage guide](./sdk/go/README.md).
-
-
-## First path
-
-```bash
-curl -s -X POST localhost:8080/v1/console/signup -H "content-type: application/json" -d "{\"email\":\"ada@campus.edu\",\"password\":\"correct-horse\",\"name\":\"Ada\"}"
-```
-
-Use the returned console token as `Authorization: Bearer ...` for `/v1/organizations`, `/v1/projects`, `/v1/environments`, and `/v1/api-keys`. Signup and login for an application user send that API key in `X-Api-Key`.
-
-## Password reset
-
-Console accounts can request a password reset from the sign-in screen. The request response is generic and never reveals whether an account exists. In the local Compose stack, open Mailpit at `http://localhost:8025` to retrieve the message; its reset link opens the console at `http://localhost:8080/reset-password`. The page submits the link's `token` query parameter to the confirm endpoint. Set `RESET_PASSWORD_URL` to the console reset page over HTTPS in production.
-
-```bash
-curl -s -X POST localhost:8080/v1/password-reset/request -H "content-type: application/json" -d "{\"email\":\"ada@campus.edu\"}"
-curl -s -X POST localhost:8080/v1/password-reset/confirm -H "content-type: application/json" -d "{\"reset_token\":\"af_pr_...\",\"password\":\"new-password-123\"}"
-```
-
-## Email verification
-
-Application signup sends a verification email. For local development, open Mailpit at `http://localhost:8025`; the link opens the hosted verification page at `http://localhost:8080/verify-email`, which confirms the link's `environment_id` and `token` with the gateway. The developer demo can also request a fresh verification link. Applications can alternatively implement their own verification page:
-
-```bash
-curl -s -X POST localhost:8080/v1/email/verification/confirm -H "content-type: application/json" -d "{\"environment_id\":\"<uuid>\",\"token\":\"af_ev_...\"}"
-```
-
-To resend a verification link, the developer demo has a resend button, or send `POST /v1/email/verification/request` with the environment API key and `{"email":"student@campus.edu"}`.
-
-## Google sign-in
-
-Configure the platform-owned Google Identity Services OAuth client ID as `GOOGLE_CLIENT_ID` in the auth service environment. In the client, request a one-time nonce with the environment API key, pass that nonce to Google Identity Services, then exchange the returned ID token and nonce:
-
-```bash
-curl -s -X POST localhost:8080/v1/oauth/google/nonce -H "X-Api-Key: <environment-key>"
-curl -s -X POST localhost:8080/v1/oauth/google -H "X-Api-Key: <environment-key>" -H "content-type: application/json" -d "{\"id_token\":\"<google-id-token>\",\"nonce\":\"<nonce-from-first-call>\"}"
-```
-
-Google credentials are validated against the configured client ID and Google's OIDC issuer. Only Google-verified email addresses are accepted. Nonces expire after five minutes and can be exchanged once. Google accounts are linked to an existing application user with the same verified email, or create a new verified user. Google sign-in is available through the TypeScript SDK; the self-hosted demo currently covers password-based flows.
-
-## Tests
+## Development checks
 
 ```bash
 go test ./...
@@ -99,4 +82,10 @@ cd ../../examples/node-oidc
 npm test
 ```
 
-Password hashing tests are slow on purpose. Argon2id is configured at 64 MiB.
+## Documentation
+
+- [Quickstart](docs/quickstart.md) · [HTTP API](docs/api.md) ·
+  [Architecture and design decisions](docs/architecture.md) ·
+  [Deployment guide](docs/beta-deployment.md)
+- [Go SDK](sdk/go/README.md) · [TypeScript SDK](sdk/typescript/README.md) ·
+  [Node.js OIDC example](examples/node-oidc/README.md)

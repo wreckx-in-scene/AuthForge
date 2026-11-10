@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111a2e">
     <title>AuthForge Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/styles.css">
     <script src="/assets/app.js" defer></script>
   </head>
@@ -12,8 +15,23 @@
     <div class="auth-layout">
       <aside class="brand-panel">
         <a class="brand" href="/" aria-label="AuthForge home">
-          <span class="brand-mark" aria-hidden="true">A</span>
-          <span>auth<span class="brand-light">forge</span></span>
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 1L2 5V11C2 15.418 6.03 19.527 11 21C15.97 19.527 20 15.418 20 11V5L11 1Z" fill="url(#shield-fill)" stroke="url(#shield-stroke)" stroke-width="1" stroke-linejoin="round"/>
+              <path d="M8 11L10.2 13.2L14.5 8.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="shield-fill" x1="2" y1="1" x2="20" y2="21" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#6366f1"/>
+                  <stop offset="1" stop-color="#7c3aed"/>
+                </linearGradient>
+                <linearGradient id="shield-stroke" x1="2" y1="1" x2="20" y2="21" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="rgba(255,255,255,0.4)"/>
+                  <stop offset="1" stop-color="rgba(255,255,255,0.1)"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span class="brand-name">Auth<span class="brand-forge">Forge</span></span>
         </a>
         <div class="brand-copy">
           <span class="eyebrow">IDENTITY, WITHOUT THE BOILERPLATE</span>
