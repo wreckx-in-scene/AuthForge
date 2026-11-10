@@ -8,6 +8,7 @@ auth-service
 .env
 .env.*
 !.env.example
+!.env.beta.example
 
 # Logs
 *.log

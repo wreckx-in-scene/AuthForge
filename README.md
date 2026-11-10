@@ -1,6 +1,21 @@
 # AuthForge
 
-Authentication infrastructure for multi-tenant applications. Developers create an organization, a project, and an environment, then call the HTTP API with an environment key. Internal services talk gRPC.
+![CI](https://github.com/wreckx-in-scene/AuthForge/actions/workflows/ci.yml/badge.svg)
+
+AuthForge is a self-hosted developer preview of multi-tenant authentication infrastructure. Developers create an organization, project, and environment, then either use the environment HTTP API or delegate application sign-in to AuthForge's hosted OpenID Connect flow. Internal services talk gRPC.
+
+## What it demonstrates
+
+- Five-service Go backend with a single public HTTP gateway and internal gRPC APIs.
+- Tenant-isolated developer workspaces and environment-scoped application users.
+- Password authentication, refresh-token rotation, email verification, password recovery, and optional Google sign-in.
+- Hosted OpenID Connect authorization-code flow with PKCE, one-use codes, EdDSA ID tokens, discovery, and JWKS.
+- TypeScript application API client and a runnable Node.js relying-party example.
+- PostgreSQL migrations, row-level security for identity/session data, rate limits, and automated tests.
+
+This is a portfolio-quality, runnable developer preview—not a hosted or production-ready identity provider. See [production gaps and design constraints](./docs/architecture.md) and [API documentation](./docs/api.md).
+
+For a small, controlled beta on a single VM, see the [beta deployment guide](./docs/beta-deployment.md). Console signup is open, so the guide explains the extra access-control needed for invited testers. It requires a domain and real SMTP credentials and assumes a free-tier VM or a machine you control; free-tier availability and billing vary. It is not high availability and should not be used for sensitive workloads.
 
 The design notes are in [docs/architecture.md](docs/architecture.md) and [docs/decisions.md](docs/decisions.md). The HTTP contract is in [docs/api.md](docs/api.md).
 
@@ -18,16 +33,19 @@ Open `http://localhost:8080` for the developer console to create an account, org
 
 This is a self-hosted developer preview, not a production-ready hosted service. The Compose defaults use development credentials and local Mailpit; Google sign-in needs a platform `GOOGLE_CLIENT_ID`. The console currently supports a single developer account and does not provide team invitations or roles. Before exposing a deployment to real users, configure HTTPS, production secrets and SMTP, backups, and appropriate network/security controls.
 
-The gateway now supports hosted OpenID Connect password sign-in/signup using authorization code + PKCE. Register an OAuth client and exact HTTPS callback URLs in the console, then use the discovery document at `/.well-known/openid-configuration`; see the [API guide](./docs/api.md#hosted-openid-connect) for the authorize and token requests. The first hosted screen supports email/password; social sign-in and userinfo are not included yet.
+The gateway now supports hosted OpenID Connect password sign-in/signup using authorization code + PKCE. Register an OAuth client and exact HTTPS callback URLs in the console, then use the discovery document at `/.well-known/openid-configuration`; see the [API guide](./docs/api.md#hosted-openid-connect) for the authorize and token requests. The first hosted screen supports email/password; social sign-in and userinfo are not included yet. A runnable [Node.js relying-party example](./examples/node-oidc/README.md) shows the complete hosted login, callback, token verification, session, refresh, and logout flow.
 
 The in-browser developer demo is deliberately limited to `af_test_pk_` keys and keeps the application key and tokens in page memory only. Use it to explore the application API, not as your application. For an integration, use the [TypeScript SDK](./sdk/typescript/README.md) or call the API from your own server/client.
 
 The signing seed in `docker-compose.yml` is a development key. It is not a production secret.
 Google sign-in is disabled unless `GOOGLE_CLIENT_ID` is configured for the platform-owned Google Identity Services app.
 
-## TypeScript SDK
+## Developer SDKs & Quickstart
 
-The application-user API has a framework-agnostic TypeScript client in [`sdk/typescript`](./sdk/typescript). See its [usage guide](./sdk/typescript/README.md) for install, signup/login, Google sign-in, email verification, and token management. Use a publishable environment key in browser code; never bundle a secret key.
+- **[Quickstart Guide](./docs/quickstart.md)**: 5-minute integration guide for React/Node, Go backends, and hosted OIDC.
+- **TypeScript SDK**: Framework-agnostic client in [sdk/typescript](./sdk/typescript). See its [usage guide](./sdk/typescript/README.md).
+- **Go SDK**: Zero-dependency Go client in [sdk/go](./sdk/go). See its [usage guide](./sdk/go/README.md).
+
 
 ## First path
 
@@ -71,6 +89,14 @@ Google credentials are validated against the configured client ID and Google's O
 
 ```bash
 go test ./...
+go vet ./...
+buf lint
+
+cd sdk/typescript
+npm test
+
+cd ../../examples/node-oidc
+npm test
 ```
 
 Password hashing tests are slow on purpose. Argon2id is configured at 64 MiB.

@@ -66,7 +66,8 @@ func run(ctx context.Context, log *slog.Logger) error {
 	if err != nil {
 		return err
 	}
-	api := httpapi.New(tenantv1.NewTenantServiceClient(tenantConn), authClient, verifier, []byte(secret), issuer, log)
+	inviteCode := os.Getenv("CONSOLE_INVITE_CODE")
+	api := httpapi.New(tenantv1.NewTenantServiceClient(tenantConn), authClient, verifier, []byte(secret), issuer, inviteCode, log)
 	httpServer := &http.Server{
 		Addr:              ":" + config.String("HTTP_PORT", "8080"),
 		Handler:           api.Handler(),

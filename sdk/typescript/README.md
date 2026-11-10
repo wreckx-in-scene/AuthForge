@@ -3,7 +3,9 @@
 Framework-agnostic client for AuthForge's application-user HTTP API. It supports
 password signup/login, Google ID-token exchange, email verification, refresh,
 logout, and the current-user endpoint. Console account and project-management
-routes are intentionally out of scope.
+routes and hosted OpenID Connect redirects are intentionally out of scope. For
+a hosted sign-in integration, use the runnable
+[Node.js OIDC example](../../examples/node-oidc/README.md).
 
 ## Install
 

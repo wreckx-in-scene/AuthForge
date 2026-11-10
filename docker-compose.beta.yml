@@ -1,0 +1,102 @@
+services:
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.beta}
+    ports: !reset []
+
+  mailpit:
+    ports: !reset []
+
+  migrate:
+    environment:
+      MIGRATE_DATABASE_URL: postgres://authforge:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.beta}@postgres:5432/authforge?sslmode=disable
+
+  db-credentials:
+    image: postgres:16-alpine
+    environment:
+      PGHOST: postgres
+      PGDATABASE: authforge
+      PGUSER: authforge
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.beta}
+      AUTHFORGE_APP_PASSWORD: ${AUTHFORGE_APP_PASSWORD:?Set AUTHFORGE_APP_PASSWORD in .env.beta}
+    command:
+      - sh
+      - -ec
+      - >-
+        until pg_isready; do sleep 2; done;
+        psql -v ON_ERROR_STOP=1
+        -v app_password="$${AUTHFORGE_APP_PASSWORD}"
+        -c "ALTER ROLE authforge_app PASSWORD :'app_password'"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  tenant:
+    environment:
+      DATABASE_URL: postgres://authforge_app:${AUTHFORGE_APP_PASSWORD:?Set AUTHFORGE_APP_PASSWORD in .env.beta}@postgres:5432/authforge?sslmode=disable
+      ISSUER: https://${AUTHFORGE_DOMAIN:?Set AUTHFORGE_DOMAIN in .env.beta}
+      CONSOLE_TOKEN_SECRET: ${CONSOLE_TOKEN_SECRET:?Set CONSOLE_TOKEN_SECRET in .env.beta}
+      SMTP_ADDR: ${SMTP_ADDR:?Set SMTP_ADDR in .env.beta}
+      SMTP_FROM: ${SMTP_FROM:?Set SMTP_FROM in .env.beta}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_STARTTLS: "true"
+      RESET_PASSWORD_URL: https://${AUTHFORGE_DOMAIN:?Set AUTHFORGE_DOMAIN in .env.beta}/reset-password
+    depends_on:
+      db-credentials:
+        condition: service_completed_successfully
+
+  identity:
+    environment:
+      DATABASE_URL: postgres://authforge_app:${AUTHFORGE_APP_PASSWORD:?Set AUTHFORGE_APP_PASSWORD in .env.beta}@postgres:5432/authforge?sslmode=disable
+      ISSUER: https://${AUTHFORGE_DOMAIN:?Set AUTHFORGE_DOMAIN in .env.beta}
+      CONSOLE_TOKEN_SECRET: ${CONSOLE_TOKEN_SECRET:?Set CONSOLE_TOKEN_SECRET in .env.beta}
+      SMTP_ADDR: ${SMTP_ADDR:?Set SMTP_ADDR in .env.beta}
+      SMTP_FROM: ${SMTP_FROM:?Set SMTP_FROM in .env.beta}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_STARTTLS: "true"
+      EMAIL_VERIFICATION_URL: https://${AUTHFORGE_DOMAIN:?Set AUTHFORGE_DOMAIN in .env.beta}/verify-email
+    depends_on:
+      db-credentials:
+        condition: service_completed_successfully
+
+  session:
+    environment:
+      DATABASE_URL: postgres://authforge_app:${AUTHFORGE_APP_PASSWORD:?Set AUTHFORGE_APP_PASSWORD in .env.beta}@postgres:5432/authforge?sslmode=disable
+    depends_on:
+      db-credentials:
+        condition: service_completed_successfully
+
+  auth:
+    environment:
+      ISSUER: https://${AUTHFORGE_DOMAIN:?Set AUTHFORGE_DOMAIN in .env.beta}
+      SIGNING_SEED: ${SIGNING_SEED:?Set SIGNING_SEED in .env.beta}
+
+  gateway:
+    environment:
+      ISSUER: https://${AUTHFORGE_DOMAIN:?Set AUTHFORGE_DOMAIN in .env.beta}
+      CONSOLE_TOKEN_SECRET: ${CONSOLE_TOKEN_SECRET:?Set CONSOLE_TOKEN_SECRET in .env.beta}
+      CONSOLE_INVITE_CODE: 
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      AUTHFORGE_DOMAIN: ${AUTHFORGE_DOMAIN:?Set AUTHFORGE_DOMAIN in .env.beta}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployments/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

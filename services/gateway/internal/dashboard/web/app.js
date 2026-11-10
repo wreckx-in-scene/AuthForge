@@ -39,6 +39,7 @@ const errorMessages = {
   invalid_reset_token: "This reset link has expired or was already used. Request a new one.",
   invalid_verification_token: "This verification link has expired or was already used. Request a new one.",
   rate_limited: "Too many attempts. Wait a little and try again.",
+  invalid_invite_code: "The invite code is invalid or missing.",
 };
 
 function showNotice(element, message) {
@@ -160,6 +161,8 @@ function switchAuthMode(mode) {
   document.querySelector("#login-tab").classList.toggle("is-active", !signup);
   document.querySelector("#login-tab").setAttribute("aria-selected", String(!signup));
   document.querySelector("#name-field").hidden = !signup;
+  const inviteField = document.querySelector("#invite-code-field");
+  if (inviteField) inviteField.hidden = !signup;
   authForm.elements.name.required = signup;
   authForm.elements.password.autocomplete = signup ? "new-password" : "current-password";
   document.querySelector("#auth-title").textContent = signup ? "Create your account" : "Welcome back";
@@ -641,7 +644,11 @@ authForm.addEventListener("submit", async (event) => {
     email: String(formData.get("email") ?? "").trim(),
     password: String(formData.get("password") ?? ""),
   };
-  if (signup) body.name = String(formData.get("name") ?? "").trim();
+  if (signup) {
+    body.name = String(formData.get("name") ?? "").trim();
+    const invite = String(formData.get("invite_code") ?? "").trim();
+    if (invite) body.invite_code = invite;
+  }
   setBusy(authForm, true, signup ? "Creating account…" : "Signing in…");
   try {
     const result = await api(signup ? "/v1/console/signup" : "/v1/console/login", { body });

@@ -1,6 +1,6 @@
 # Design decisions
 
-These are the choices Milestone 01 is built on. Each one names the alternative it turned down and the consequence that shows up in the code.
+These are the choices the developer preview is built on. Each one names the alternative it turned down and the consequence that shows up in the code.
 
 ## 1. The environment is the isolation boundary
 
@@ -66,7 +66,7 @@ Decision. Auth signs access tokens with Ed25519. The private seed is an environm
 
 Alternative. A per-project HMAC secret in the project row, which is what the first schema did. It makes every project a signer and puts the signing material next to the API-key hashes. It also does not produce a JWKS document a third party can fetch.
 
-Tradeoff. Until expiry, a stolen access token still works after logout. The default lifetime is ten minutes. `GET /v1/me` does not read the session table, so this behavior is visible and testable rather than hidden behind an accidental database lookup.
+Tradeoff. Until expiry, a stolen access token still works after logout. The default lifetime is ten minutes. `GET /v1/me` does not read the session table, so this behavior is visible and testable rather than hidden behind an accidental database lookup. OIDC ID tokens are audience-bound to a registered public client and use EdDSA with a published JWKS; applications validate the ID token and must not treat it as the environment API access token.
 
 Console tokens are HMAC-SHA256 and only the console routes accept them. The verifiers pin the algorithm. An access token cannot be checked with the console secret, which is the usual algorithm-confusion bug.
 
@@ -90,7 +90,7 @@ Alternative. An outbox in identity that creates the session asynchronously. The 
 
 Tradeoff. The system can contain a user with no session, or a session whose tokens were never delivered. It must not contain a response whose tokens do not match a committed session. Callers recover by logging in.
 
-Email verification is sent after the identity commit. The access token says `email_verified: false` until verification; this milestone does not block initial login on mail delivery.
+Email verification is sent after the identity commit. Initial login is allowed before email verification; access and ID tokens say `email_verified: false` until the user verifies and obtains a fresh token. A production product may choose to enforce verified email in its own authorization policy.
 
 ## 9. Password and key storage
 
@@ -114,8 +114,10 @@ Migrations are not run automatically by every replica. Two containers applying t
 
 - Kafka and a transactional outbox. Nothing asynchronous has to be delivered yet.
 - A denylist of access-token ids. Short expiry is the revocation story for access tokens.
-- mTLS, Redis rate limits, and a JWKS HTTP document. The gateway already treats the auth service as the source of the verification key, which is the same relationship a JWKS URL will have.
-- The hosted-login slice uses OpenID Connect authorization-code flow with PKCE; access and refresh tokens are never sent in redirect URLs. Social sign-in, userinfo, and broader scope/claim customization remain out of scope for this slice.
+- mTLS and shared rate limits. The gateway currently trusts the private Compose network and uses an in-memory limiter.
+- Multi-key rotation and a documented rollover window for access and ID-token signing keys.
+- The hosted-login slice uses OpenID Connect authorization-code flow with PKCE, a public JWKS document, and audience-bound EdDSA ID tokens; access and refresh tokens are never sent in redirect URLs. Social sign-in on the hosted page, userinfo, and broader scope/claim customization remain out of scope.
+- A runnable relying-party integration in `examples/node-oidc` demonstrates signature, issuer, audience, expiry, and nonce validation; its in-memory app sessions are for teaching only.
 
 ## 12. Google sign-in uses a verified ID-token exchange
 

@@ -133,6 +133,8 @@ code_verifier=<original-pkce-verifier>
 
 The response contains an AuthForge access token, refresh token, and OIDC ID token. The access token is for the AuthForge environment API; the ID token is audience-bound to the OAuth client and includes `sub`, `email`, `email_verified`, and the request `nonce` when supplied. Codes expire after five minutes and are bound to the client, callback, and S256 verifier. The token endpoint accepts browser requests only when their `Origin` matches a registered callback origin; server-side exchanges may omit `Origin`.
 
+Always validate the ID-token signature against the published JWKS and check its issuer, audience, expiry, and nonce before creating an application session. The included [Node.js relying-party example](../examples/node-oidc/README.md) demonstrates these checks and a complete local app integration. Hosted signup sends the application user an email-verification message; `email_verified` remains false until the user completes that verification and obtains a fresh token by signing in again.
+
 The initial hosted screen supports password sign-in and signup. Supported scopes are `openid email`; social sign-in, userinfo, logout redirect, and broader scope/claim customization are not included yet.
 
 ## Application auth

@@ -4,20 +4,47 @@ AuthForge is a multi-tenant identity platform. A developer creates an organizati
 
 Application users are not organization members. Organization members are the developers who manage a project. Those two identity domains never share a table.
 
-## Milestone 01
+## Delivered capabilities
 
-This milestone is the distributed signup and login path.
+The developer preview has two end-to-end paths:
 
-A developer can:
+1. **Environment API:** a developer creates a console account, organization,
+   project, environment, and API key. An application uses that key for
+   password signup/login, email verification, Google sign-in (when configured),
+   token refresh, logout, and the current-user endpoint.
+2. **Hosted OIDC:** a developer registers exact callback URLs for a public
+   OAuth client. The application redirects users to AuthForge for password
+   signup/login using authorization code + PKCE, validates the returned ID
+   token against discovery/JWKS, and keeps its own application session.
 
-1. Start the stack with Docker Compose.
-2. Create an account, an organization, a project, and an environment.
-3. Issue a project API key.
-4. Sign a user up and receive an access token and a refresh token.
-5. Call a protected route with the access token.
-6. Rotate the refresh token, or revoke the session.
+The gateway publishes OIDC discovery, JWKS, authorization, and token
+endpoints. Authorization codes are short lived, single use, and bound to the
+client, callback URL, and S256 challenge. Email verification and console
+password recovery use separate single-use SMTP links. A runnable relying-party
+integration is in `examples/node-oidc`.
 
-Google Identity Services sign-in is available with a platform-owned client ID, a TypeScript SDK wraps the application-user API, and the gateway serves a developer console for account and initial workspace setup. Authorization-code redirect flows, Kafka, and hosted login are later milestones. Application-user email verification and console password recovery use separate single-use SMTP links.
+The project is a self-hosted developer preview, not a production hosted
+identity service. Compose credentials, local Mailpit, in-memory rate limits,
+and the sample app's in-memory sessions are for development only.
+
+## Production readiness boundary
+
+Before operating this as an internet-facing identity service, the deployment
+needs, at minimum:
+
+- Managed secrets and signing-key storage, key rotation, and recovery procedures.
+- HTTPS termination and authenticated/encrypted service-to-service traffic.
+- Production SMTP, delivery monitoring, and abuse-resistant account recovery.
+- Shared rate limiting with explicitly trusted proxy/client-IP configuration.
+- Automated database backups, restore drills, monitoring, alerting, and an
+  incident-response process.
+- A security review of authentication flows and deployment configuration.
+- Durable developer sessions, team membership/roles, and operational support
+  if it is offered to multiple customer teams.
+
+The Node.js relying-party example is also intentionally a teaching sample:
+its sessions and login transactions live in memory. Use a maintained
+framework session store and OIDC library for a real application.
 
 ## Runtime
 
@@ -27,12 +54,26 @@ developer app
 API gateway
     |  gRPC
     +-- tenant       organizations, projects, environments, API keys, console accounts, password recovery
-    +-- auth         signup, login, refresh, logout, access-token signing
+    +-- auth         signup, login, refresh, logout, authorization, token signing
             +-- identity    users and password credentials
             +-- session     sessions and refresh-token families
 ```
 
+Hosted OIDC is served by the gateway. It resolves a registered public client
+and exact callback before displaying the hosted password page; auth
+orchestrates identity/session work and signs an ID token whose audience is the
+OAuth client. The current implementation uses the same Ed25519 signer for
+application access tokens and ID tokens; JWKS publishes its public key. A
+production key-rotation design must cover both token types and all verifiers.
+
 Postgres is the primary data dependency. The tenant service sends console password-reset messages and the identity service sends application-user verification messages through configured SMTP; local Compose captures them in Mailpit. Each service owns a schema: `tenant`, `identity`, and `session`. The auth service and the gateway do not own tables.
+
+The local Compose stack connects application services as the non-superuser
+`authforge_app` role; the migration job alone uses the PostgreSQL
+administrator. `docs/beta-deployment.md` describes an opt-in, single-VM Compose
+overlay with Caddy HTTPS, externally configured SMTP, and a separately
+provisioned application-role password. It remains a limited, non-HA beta
+deployment and depends on infrastructure the operator supplies.
 
 The gateway rate-limits signup, login, reset, and verification endpoints by the direct TCP peer IP. This first implementation is process-local; horizontal deployments need a shared limiter and an explicitly trusted proxy boundary before forwarding client IPs.
 
@@ -89,7 +130,7 @@ The claims are:
 | `aud`            | environment id                                       |
 | `sid`            | session id                                           |
 | `pid`            | project id                                           |
-| `email_verified` | false until a later milestone sends verification mail |
+| `email_verified` | false until the application user verifies their email |
 | `exp`            | ten minutes by default                               |
 
 Refresh tokens are opaque random strings with an `af_rt_` prefix. The session service stores only a SHA-256 hash. Rotation locks the presented token and its session, marks the token used, and inserts a successor whose `parent_id` points at the used token. The session expiry slides forward with the new token.

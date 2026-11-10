@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Go tests and vet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go test ./...
+      - run: go vet ./...
+      - name: Check Go formatting
+        shell: bash
+        run: test -z "$(gofmt -l $(git ls-files '*.go'))"
+
+  protobuf:
+    name: Protobuf lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-setup-action@v1
+      - run: buf lint
+
+  compose:
+    name: Docker Compose configuration
+    runs-on: ubuntu-latest
+    env:
+      AUTHFORGE_DOMAIN: auth.example.test
+      POSTGRES_PASSWORD: 1111111111111111111111111111111111111111111111111111111111111111
+      AUTHFORGE_APP_PASSWORD: 2222222222222222222222222222222222222222222222222222222222222222
+      CONSOLE_TOKEN_SECRET: 3333333333333333333333333333333333333333333333333333333333333333
+      SIGNING_SEED: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      SMTP_ADDR: smtp.example.test:587
+      SMTP_FROM: AuthForge <no-reply@example.test>
+      SMTP_USERNAME: smtp-user
+      SMTP_PASSWORD: smtp-password
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate local and beta Compose files
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.beta.yml config --quiet
+
+  javascript:
+    name: JavaScript and SDK tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sdk/typescript/package-lock.json
+      - name: Test hosted OIDC example
+        working-directory: examples/node-oidc
+        run: npm test
+      - name: Test TypeScript SDK
+        working-directory: sdk/typescript
+        run: npm ci --no-audit --no-fund && npm test

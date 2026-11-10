@@ -1,0 +1,4 @@
+{$AUTHFORGE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy gateway:8080
+}

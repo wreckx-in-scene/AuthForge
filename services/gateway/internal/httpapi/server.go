@@ -24,14 +24,15 @@ type Server struct {
 	verifier      *token.Verifier
 	consoleSecret []byte
 	issuer        string
+	inviteCode    string
 	log           *slog.Logger
 	rateLimiter   *rateLimiter
 }
 
-func New(tenant tenantv1.TenantServiceClient, auth authv1.AuthServiceClient, verifier *token.Verifier, consoleSecret []byte, issuer string, log *slog.Logger) *Server {
+func New(tenant tenantv1.TenantServiceClient, auth authv1.AuthServiceClient, verifier *token.Verifier, consoleSecret []byte, issuer string, inviteCode string, log *slog.Logger) *Server {
 	return &Server{
 		tenant: tenant, auth: auth, verifier: verifier, consoleSecret: consoleSecret,
-		issuer: issuer, log: log, rateLimiter: newRateLimiter(),
+		issuer: issuer, inviteCode: inviteCode, log: log, rateLimiter: newRateLimiter(),
 	}
 }
 
@@ -104,11 +105,16 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) consoleSignup(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-		Name     string `json:"name"`
+		Email      string `json:"email"`
+		Password   string `json:"password"`
+		Name       string `json:"name"`
+		InviteCode string `json:"invite_code"`
 	}
 	if !readJSON(w, r, &body) {
+		return
+	}
+	if s.inviteCode != "" && body.InviteCode != s.inviteCode {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "invalid_invite_code"})
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
